@@ -1,0 +1,7 @@
+Về lưu trữ ảnh để đưa vào các trả lời của bot, đang sử dụng server ImgBB (https://imgbb.com/)
+với account đăng nhập là của cá nhân KC
+
+
+khi user gửi câu hỏi
+-> nếu mà câu hỏi có <= 4 từ, thì truy vấn sẽ là dạng chính xác, ko atlas
+mà nếu atlas cũng chỉ fuzzy 1 word, điều này để đảm bảo hoa thường hoặc kết quả sai khác tối thiêu

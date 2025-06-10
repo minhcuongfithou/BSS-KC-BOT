@@ -1,0 +1,23 @@
+
+POST http://localhost:3000/api/bot/post
+Content-Type: application/json
+
+{
+  "author":"KC",
+  "title":"123",
+  "content":"Thêm trong vahu",
+  "type":"solution"
+}
+### Remove all
+# DELETE http://localhost:3000/api/bot/post
+# Content-Type: application/json
+
+# {}
+// "dev": "concurrently \"next dev\" \"node server.js\"",
+
+### get all
+GET http://localhost:3000/api/bot/post?q=import%20CP%2C%20PL%20tối%20đa%20bao%20nhiêu%20rule&type=note
+
+
+###
+GET http://localhost:3000/api/bot/post?q=[Custom RF] confirm password
