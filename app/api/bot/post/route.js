@@ -1,5 +1,5 @@
-import connectDB from '@/utils/mongodb';
 import postService from '@/services/postService';
+import connectDB from '@/utils/mongodb';
 
 export async function GET(req) {
     await connectDB();
@@ -50,7 +50,7 @@ export async function POST(req) {
         );
     } catch (error) {
         console.error('Lỗi khi tạo bài viết:', error);
-        return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 500 });
+        // return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 500 });
     }
 
     

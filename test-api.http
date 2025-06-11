@@ -21,3 +21,17 @@ GET http://localhost:3000/api/bot/post?q=import%20CP%2C%20PL%20tối%20đa%20bao
 
 ###
 GET http://localhost:3000/api/bot/post?q=[Custom RF] confirm password
+
+###
+POST http://localhost:3000/api/bot/vahu
+
+###
+GET http://localhost:3000/api/bot/vahu?domain=dev-cuong-nm-store.myshopify.com
+###
+
+POST http://localhost:3000/api/bot/vahu
+
+{
+  "domain":"dev-cuong-nm-store.myshopify.com",
+  "newContent":""
+}
