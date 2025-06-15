@@ -1,49 +1,59 @@
+
 import vahuService from '@/services/vahuService';
 import connectDB from '@/utils/mongodb';
-
-export async function GET(req) {
-    await connectDB();
-    const { searchParams } = new URL(req.url);
-    const domain = searchParams.get('domain');
-    try {
-        const content = await vahuService.getData(domain);
-        console.log(content)
-        return new Response(
-            { success: true, content },
-            { status: 200 }
-        );
-    } catch (err) {
-        console.log("error")
-        return new Response(JSON.stringify({
-            success: false,
-            error: err.message,
-        }), { status: 500 });
-    }
-}
+import { NextResponse } from 'next/server';
 
 export async function POST(req) {
     await connectDB();
     try {
-        const { domain, newContent } = await req.json();
-        // const data = await vahuService.login();
-        const result = await vahuService.saveContent(domain, newContent);
-        console.log(
-           result?.error
-        )
-        if (result.success) {
-            return new Response(
+        let { domain, name, params } = await req.json();
+        console.log(typeof params)
+        try {
+            params = JSON.parse(params)
+        } catch (error) {
+            console.error('!!!', error);
+        }
+
+        console.log({ domain, name, params })
+        const result = await vahuService.saveContent(domain, "add", name, params);
+
+        console.log({ result })
+        if (result?.success) {
+            return NextResponse.json(
                 { success: true },
                 { status: 201 }
             );
         }
-        return new Response(
-            { success: false },
-            { error: result?.error || 'nothing' },
+
+        return NextResponse.json(
+            { success: false, error: result?.error || 'nothing' },
             { status: 500 }
         );
 
     } catch (error) {
-        console.error('Lỗi khi tạo bài viết:', error);
-        // return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 500 });
+        console.error('Error while creating post:', error);
+    }
+}
+export async function DELETE(req) {
+    await connectDB();
+    try {
+        const { domain, name } = await req.json();
+
+        const result = await vahuService.saveContent(domain, "delete", name);
+
+        if (result?.success) {
+            return NextResponse.json(
+                { success: true },
+                { status: 201 }
+            );
+        }
+
+        return NextResponse.json(
+            { success: false, error: result?.error || 'nothing' },
+            { status: 500 }
+        );
+
+    } catch (error) {
+        console.error('Error while creating post:', error);
     }
 }

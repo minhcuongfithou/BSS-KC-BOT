@@ -10,7 +10,8 @@ class MattermostWSBot {
         botUserId,
         botUsername,
         channelId,
-        apiMMPost
+        apiMMPost,
+        apiMMVahu
     }) {
         this.token = token;
         this.wsUrl = wsUrl;
@@ -19,9 +20,10 @@ class MattermostWSBot {
         this.botUsername = botUsername;
         this.targetChannelId = channelId;
         this.API_MM_POST = apiMMPost;
+        this.API_MM_VAHU = apiMMVahu;
     }
 
-    async sendMessage(channelId, message, rootId = null) {
+    async sendMessage(channelId, message = '', rootId = null) {
         try {
             const payload = {
                 channel_id: channelId,
@@ -33,16 +35,16 @@ class MattermostWSBot {
             const res = await axios.post(
                 `${this.apiUrl}/posts`,
                 payload, {
-                    headers: {
-                        Authorization: `Bearer ${this.token}`
-                    },
-                }
+                headers: {
+                    Authorization: `Bearer ${this.token}`
+                },
+            }
             );
             if (res.status !== 201) {
-                console.error('❌ Lỗi khi gửi tin nhắn:', res.data);
+                console.error('Error sending message:', res.data);
             }
         } catch (error) {
-            console.error('❌ Lỗi gửi tin nhắn:', error.message);
+            console.error('Error sending message:', error.message);
         }
     }
 
@@ -54,67 +56,27 @@ class MattermostWSBot {
             const msg = postData.message;
             const channelId = postData.channel_id;
             const rootId = postData.root_id || postData.id;
-            console.log(postData)
             if (!msg.includes(`@${this.botUsername}`)) return;
             if (userId === this.botUserId) return;
 
-            console.log(`📩 Message from user ${userId}: ${msg}`);
-            let question = msg.split(" ").splice(1).join(" ");
-            let type = question.endsWith("?") ? 'note' : 'solution';
-            if(question.endsWith("?")) {
-                question = question.replace(/\?$/, '');
+            console.log(`Message from user ${userId}: ${msg}`);
+            let question = msg.split(" ").splice(1).join(" ").trim().replace(/\s+/g, ' ');;
+
+            const commands = ["/help", "/vahu", '/solution'];
+            const isCommand = commands.some(cmd => question.startsWith(cmd));
+            if (isCommand) {
+                const command = commands.find(cmd => question.startsWith(cmd));
+                const content = question.slice(command.length);
+                this.handleCommand(command, content)
+                    .then((textRes) => {
+                        this.sendMessage(channelId, textRes, rootId);
+                    })
+                    .catch((err) => {
+                        console.error('Error while processing command:', err);
+                    });
+            } else {
+                this.sendMessage(channelId, `Unknown command. Type \`/help\` for instructions.`, rootId);
             }
-             
-            const params = { q: question, type };
-
-            axios.get(this.API_MM_POST, { params })
-                .then(response => {
-                    const {
-                        type, results
-                    } = response.data;
-                    console.log({results})
-                    if(type == 'solution') {
-                        if (results.length > 1) {
-                            let reply = '🔎 Danh sách issue:\n';
-                            results.forEach((issue, i) => {
-                                reply += `\`${i + 1}\` ${issue.title}\n`;
-                            });
-                            console.log(TextUtils.bbcodeToMarkdown(reply))
-                            this.sendMessage(channelId, reply, rootId);
-                        } else {
-                            const {
-                                content
-                            } = results[0];
-                            console.log(TextUtils.bbcodeToMarkdown(content))
-                            this.sendMessage(channelId, content, rootId);
-                        }
-                    } else if(type == 'note') {
-                        console.log(results)
-                        if (results.length > 1) {
-                            const titles = results.map((issue) => '`' + issue.title + '`');
-                            let options = '';
-                            if (titles.length === 1) {
-                                options = titles[0];
-                            } else {
-                                const last = titles.pop();
-                                options = `${titles.join(', ')} hay ${last}`;
-                            }
-                            const reply = `Bạn muốn hỏi về vấn đề ${options}`;
-                            this.sendMessage(channelId, reply, rootId);
-
-                        } else if (results.length === 1) {
-                            const { content } = results[0];
-                            this.sendMessage(channelId, TextUtils.bbcodeToMarkdown(content), rootId);
-                        } else {
-                            this.sendMessage(channelId, 'Không tìm thấy nội dung phù hợp.', rootId);
-                        }
-                    } else {
-                        this.sendMessage(channelId, 'Không tìm thấy nội dung phù hợp', rootId);
-                    }
-                })
-                .catch(error => {
-                    console.error('❌ Lỗi:', error.response?.data || error.message);
-                });
         }
     }
 
@@ -126,10 +88,10 @@ class MattermostWSBot {
                 },
             });
 
-            this.ws = ws; // Lưu ws ra ngoài nếu cần
+            this.ws = ws;
 
             ws.on('open', () => {
-                console.log('✅ WebSocket đã kết nối.');
+                console.log('WebSocket connected.');
             });
 
             ws.on('message', (data) => {
@@ -137,19 +99,96 @@ class MattermostWSBot {
             });
 
             ws.on('error', (error) => {
-                console.error('Lỗi WebSocket:', error);
+                console.error('WebSocket error:', error);
             });
 
             ws.on('close', () => {
-                console.log('🔌 Kết nối WebSocket đóng. Tự động kết nối lại sau 3 giây...');
-                setTimeout(connect, 3000); // Thử lại sau 3s
+                console.log('WebSocket connection closed. Reconnecting in 3 seconds...');
+                setTimeout(connect, 3000);
             });
 
-            console.log('🚀 Bot đang chạy...');
+            console.log('Bot is running...');
         };
 
-        connect(); // Khởi động kết nối ban đầu
+
+        connect();
+    }
+
+    async handleCommand(command, content) {
+        console.log({ command, content })
+        switch (command) {
+            case '/help':
+                return `Available Commands:\n- \`/solution <your solution>\`: Find a solution\n- \`/vahu <domain> [-d] <action> <params>\`: Automatic issue resolution`;
+
+            case '/vahu': {
+                const parts = content.trim().split(/\s+/);
+
+                let domain = '';
+                let name = '';
+                let params = [];
+                if (parts[0].includes('-d')) {
+                    domain = parts[1];
+                    name = parts[2];
+                    console.log({ domain, name })
+                    try {
+                        const response = await axios.delete(this.API_MM_VAHU, {
+                            data: {
+                                domain,
+                                name
+                            }
+                        });
+                        const results = response.data;
+                        if (results.success) {
+                            return 'Completed';
+                        }
+                    } catch (error) {
+                        console.error('API call error:', error.message);
+                    }
+
+                } else {
+                    domain = parts[0];
+                    name = parts[1];
+                    params = parts.slice(2);
+
+                    try {
+                        const response = await axios.post(this.API_MM_VAHU, { domain, name, params });
+                        const results = response.data;
+                        if (results.success) {
+                            return 'Completed';
+                        }
+                    } catch (error) {
+                        console.error('API call error:', error.message);
+                    }
+                }
+                return '';
+            }
+
+            case '/solution': {
+                if (!content) return '⚠️ Please provide the issue title after `/solution [issue title]`.';
+                try {
+                    const title = content.trim().replace(/\s+/g, ' ');
+                    const response = await axios.get(`${this.API_MM_POST}?q=${title}`);
+                    const results = response.data;
+                    if (results.success) {
+                        if (results.data.results.length === 0) {
+                            return 'No solution found';
+                        } else if (results.data.results.length === 1) {
+                            return TextUtils.bbcodeToMarkdown(results.data.results[0]?.content);
+                        } else {
+                            let reply = 'Similar solutions found:\n';
+                            results.data.results.map((title, i) => {
+                                reply += `\`${i + 1}\` ${title}\n`;
+                            });
+                            return TextUtils.bbcodeToMarkdown(reply);
+                        }
+                    }
+                } catch (error) {
+                    return `API call error: ${error.message}`;
+                }
+            }
+        }
     }
 }
+
 
 export default MattermostWSBot;

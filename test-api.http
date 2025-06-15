@@ -33,5 +33,14 @@ POST http://localhost:3000/api/bot/vahu
 
 {
   "domain":"dev-cuong-nm-store.myshopify.com",
-  "newContent":""
+  "name": "custom-display-some-country",
+  "params": ["['KC', 'POP']"]
+}
+
+###
+DELETE http://localhost:3000/api/bot/vahu
+
+{
+  "domain":"dev-cuong-nm-store.myshopify.com",
+  "name": "custom-display-some-country"
 }

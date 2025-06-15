@@ -27,8 +27,6 @@ export default function EditPostPage() {
         setIsFormChanged(changed);
     }, [form]);
 
-    if (loading) return <div>Loading...</div>;
-
     useEffect(() => {
         setLoading(true);
         fetch(`/api/bot/post/${id}`)
@@ -59,6 +57,8 @@ export default function EditPostPage() {
         });
         if (res.ok) router.push('/posts');
     };
+
+    if (loading) return <div>Loading...</div>;
 
     return <div className="container">
         <h1>Sửa bài viết</h1>

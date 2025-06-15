@@ -29,10 +29,7 @@ export async function GET(req) {
         });
 
     } catch (err) {
-        return new Response(JSON.stringify({
-            success: false,
-            error: err.message,
-        }), { status: 500 });
+        return NextResponse.json({ sucess: false, message: error }, { status: 500 });
     }
 }
 
@@ -42,16 +39,13 @@ export async function POST(req) {
     const body = await req.json();
     try {
         const data = await postService.createPost(body);
-        console.log(body)
-        console.log(data)
         return new Response(
-            { success: true, data }, 
+            { success: true, data },
             { status: 201 }
         );
     } catch (error) {
-        console.error('Lỗi khi tạo bài viết:', error);
-        // return NextResponse.json({ message: 'Dữ liệu không hợp lệ' }, { status: 500 });
+        return NextResponse.json({ sucess: false, message: error }, { status: 500 });
     }
 
-    
+
 }

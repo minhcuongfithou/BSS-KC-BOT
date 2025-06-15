@@ -8,20 +8,19 @@ const createPost = async(body) => {
 }
 
 const handleFuzzySearch = async(query, type) => {
-    // console.log({query, type})
     let exact = await searchService.findExactPostByTitle(query);
 
     if (exact) {
         return {
             exact: true,
             results: [exact],
-            message: 'Tìm thấy kết quả chính xác.',
+            message: 'Exact match found.',
         };
     }
 
     let results = await searchService.searchPosts(query, type);
     if (!results || results.length === 0) {
-        return { exact: false, results: [], message: 'Không tìm thấy kết quả nào.', type };
+        return { exact: false, results: [], message: 'No results found.', type };
     }
 
     if (results.length === 1) {
@@ -32,15 +31,14 @@ const handleFuzzySearch = async(query, type) => {
         if (exactAgain) {
             return { exact: true, results: [exactAgain], type };
         } else {
-            return { exact: false, results, message: 'Gần giống 1 kết quả.', type };
+            return { exact: false, results, message: 'One similar result found.', type };
         }
     }
     results = results.map(result => result.title);
-    return { exact: false, results, message: 'Tìm thấy nhiều kết quả gần đúng.', type };
+    return { exact: false, results, message: 'Multiple similar results found.', type };
 }
 
 const searchPosts = async (query, type) => {
-    await connectDB();
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
     const useFuzzy = words.length >= 4;
 
@@ -78,7 +76,6 @@ const searchPosts = async (query, type) => {
 };
 
 export async function findExactPostByTitle(title) {
-    await connectDB();
     return await Post.findOne({
         title: { $regex: `^${title}$`, $options: 'i' }
     });

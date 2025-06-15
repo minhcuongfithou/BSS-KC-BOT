@@ -9,7 +9,8 @@ const bot = new MattermostWSBot({
   botUserId: process.env.BOT_USER_ID,
   botUsername: process.env.BOT_USERNAME,
   channelId: process.env.CHANNEL_ID,
-  apiMMPost: process.env.API_MM_POST
+  apiMMPost: process.env.API_MM_POST,
+  apiMMVahu: process.env.API_MM_VAHU
 });
 
 bot.run();

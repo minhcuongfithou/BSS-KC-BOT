@@ -8,7 +8,7 @@ export async function GET(req, { params }) {
     try {
         const post = await Post.findById(id);
         if (!post) {
-            return NextResponse.json({ message: 'Không tìm thấy bài viết' }, { status: 404 });
+            return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
         return NextResponse.json(post, { status: 200 });
     } catch (error) {
@@ -24,24 +24,25 @@ export async function PUT(req, { params }) {
     try {
         const updatedPost = await Post.findByIdAndUpdate(id, data, { new: true });
         if (!updatedPost) {
-            return NextResponse.json({ message: 'Không tìm thấy bài viết' }, { status: 404 });
+            return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
         return NextResponse.json(updatedPost);
     } catch (error) {
-        return NextResponse.json({ message: 'Lỗi khi cập nhật', error }, { status: 500 });
+        return NextResponse.json({ message: 'Error while updating', error }, { status: 500 });
     }
 }
 
 export async function DELETE(req, { params }) {
     await connectDB();
-    const { id } = await params;
+    const { id } = params;
     try {
         const deleted = await Post.findByIdAndDelete(id);
         if (!deleted) {
-            return NextResponse.json({ message: 'Không tìm thấy bài viết' }, { status: 404 });
+            return NextResponse.json({ message: 'Post not found' }, { status: 404 });
         }
-        return NextResponse.json({ message: 'Xóa thành công', id });
+        return NextResponse.json({ message: 'Deleted successfully', id });
     } catch (error) {
-        return NextResponse.json({ message: 'Lỗi khi xóa', error }, { status: 500 });
+        return NextResponse.json({ message: 'Error while deleting', error }, { status: 500 });
     }
 }
+
