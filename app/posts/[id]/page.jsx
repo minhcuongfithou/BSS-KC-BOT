@@ -58,19 +58,19 @@ export default function EditPostPage() {
         if (res.ok) router.push('/posts');
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return null;
 
     return <div className="container">
         <h1>Sửa bài viết</h1>
         <form onSubmit={handleUpdate}>
             <input className='mb-10' type="text" placeholder="Tiêu đề" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <input className='mb-10' type="text" placeholder="Tác giả" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} />
-            <HTMLEditor
+            {!loading && <HTMLEditor
                 form={form}
                 onChange={(newForm) => {
                     setForm(newForm);
                 }}
-            />
+            />}
 
             <select className='mb-10' value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                 <option value="note">Note</option>

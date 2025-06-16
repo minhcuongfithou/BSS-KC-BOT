@@ -239,3 +239,74 @@ pre {
     margin-top: 0;
     margin-bottom: 0;
 }
+/* CRUD */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f3f4f6;
+    color: #333;
+}
+
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    background-color: #1e293b;
+    color: #fff;
+    padding: 2rem 1rem;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    font-weight: bold;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    margin: 1rem 0;
+}
+
+.sidebar a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-weight: 500;
+    display: block;
+}
+
+.sidebar a:hover {
+    color: #38bdf8;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    background-color: #ffffff;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.content {
+    flex-grow: 1;
+    padding: 2rem;
+    background-color: #f9fafb;
+}
+
+.footer {
+    padding: 0rem 2rem;
+    font-size: 0.85rem;
+    text-align: center;
+    color: #777;
+}

@@ -3,6 +3,10 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import HTMLEditor from '@/app/components/HTMLEditor';
 
+export const metadata = {
+    title: 'Quản lý bài viết 123',
+    description: 'Trang quản lý bài viết của bạn'
+};
 export default function EditPostPage() {
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ title: '', content: '', author: '', type: 'note' });
@@ -11,34 +15,25 @@ export default function EditPostPage() {
     const router = useRouter();
     const params = useParams();
 
-    const initialFormRef = useRef();
+    const initialFormRef = useRef(form);
 
     useEffect(() => {
-        if (loading) return;
-
-        if (!initialFormRef.current) return;
-
         const fields = ['title', 'content', 'author', 'type'];
         const changed = fields.some(
             (field) => form[field] !== initialFormRef.current[field]
         );
-        console.log(initialFormRef.current)
         setIsFormChanged(changed);
     }, [form]);
-
-    if (loading) return <div>Loading...</div>;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        console.log({ form })
         try {
             const res = await fetch('/api/bot/post', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(form),
             });
-            console.log(res)
             if (res.ok) {
                 router.push('/posts')
             } else {
@@ -52,6 +47,8 @@ export default function EditPostPage() {
             setLoading(false);
         }
     };
+
+    if (loading) return <></>;
 
     return <div>
         <h2>Thêm mới bài viết</h2>

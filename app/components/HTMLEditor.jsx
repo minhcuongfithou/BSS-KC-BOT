@@ -18,7 +18,6 @@ export default function HTMLEditor({ form, onChange }) {
     };
 
     const parseBBCode = (text) => {
-        console.log(text)
         text = text
             .replace(/\[h1\](.*?)\[\/h1\]/gi, '<h1>$1</h1>')
             .replace(/\[h2\](.*?)\[\/h2\]/gi, '<h2>$1</h2>')
