@@ -1,17 +1,15 @@
 'use client';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Pencil, ClipboardList, Trash2 } from 'lucide-react';
-import LoadingSpinner from '../components/LoadingSpinner';
+import { ClipboardList, Pencil, Trash2 } from 'lucide-react';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 export default function AllPostsPage() {
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState([]);
-    const router = useRouter();
 
     const fetchPosts = async () => {
         try {
-            const res = await fetch('/api/bot/post');
+            const res = await fetch('/api/bot/vahu');
             const result = await res.json();
             if (result.success) {
                 console.log(result)
@@ -26,9 +24,8 @@ export default function AllPostsPage() {
         fetchPosts();
     }, []);
 
-    async function handleDelete(postId) {
-        console.log({ postId })
-        const res = await fetch(`/api/bot/post/${postId}`, {
+    async function handleDelete(actionId) {
+        const res = await fetch(`/api/vahu/${actionId}`, {
             method: 'DELETE',
         });
         if (res.ok) {
@@ -40,36 +37,32 @@ export default function AllPostsPage() {
 
     return (
         <div className="container">
-            <h1><ClipboardList size={27} /> SOLUTION</h1>
-            <div className="text-right mb-10"><a href={`/posts/create`}><button className="btn btn-success">Create</button></a></div>
+            <h1> <ClipboardList size={27} /> VAHU</h1>
+            <div className="text-right mb-10"><a href={`/vahu/create`}><button className="btn btn-success">Create</button></a></div>
             <table className="styled-table">
                 <thead>
                     <tr>
                         <th width="10%" className="text-center">ID</th>
-                        <th width="40%" className="text-center">Tiêu đề</th>
-                        <th width="10%" className="text-center">Tác giả</th>
-                        <th width="10%" className="text-center">Loại</th>
-                        <th width="18%" className="text-center">Ngày cập nhật</th>
+                        <th width="20%" className="text-center">Name</th>
+                        <th width="30%" className="text-center">Title</th>
                         <th width="12%" className="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {posts.map((post, index) => (
-                        <tr key={post._id}>
+                        <tr key={index + 1}>
                             <td className="text-center">{index + 1}</td>
+                            <td>{post.action}</td>
                             <td>{post.title}</td>
-                            <td className="text-center">{post.author}</td>
-                            <td className="text-center"><span title={post.type}>{post.type === 'solution' ? '✔️' : '✏️'}</span></td>
-                            <td>{new Date(post.updated_at).toLocaleString()}</td>
                             <td className="text-center">
-                                <a className="btn btn-sm btn-primary" href={`/posts/${post._id}`} style={{ marginRight: 8 }}>
+                                <a className="btn btn-sm btn-primary" href={`/vahu/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>
                                 </a>
                                 <button
                                     className="btn btn-sm btn-danger"
                                     onClick={() => {
-                                        const confirmed = window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?');
+                                        const confirmed = window.confirm('Bạn có chắc chắn muốn xóa action này không?');
                                         if (confirmed) {
                                             handleDelete(post._id);
                                         }

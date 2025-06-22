@@ -19,6 +19,7 @@ const handleFuzzySearch = async(query, type) => {
     }
 
     let results = await searchService.searchPosts(query, type);
+
     if (!results || results.length === 0) {
         return { exact: false, results: [], message: 'No results found.', type };
     }
@@ -67,7 +68,7 @@ const searchPosts = async (query, type) => {
                 }
             }
         },
-        { $match: type ? { type } : {} },
+        // { $match: type ? { type } : {} },
         { $limit: 10 }
     ];
 

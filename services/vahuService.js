@@ -1,9 +1,24 @@
 import axios from 'axios';
 import Token from '../models/Token';
 import dotenv from 'dotenv';
-import Action from '@/models/Actions';
+import Action from '@/models/Action';
 dotenv.config();
 
+// Backend
+const createAction = async(body) => {
+    const { title, action, callback } = body;
+    const hash = Buffer.from(action).toString('base64');
+    const newAction = new Action({ callback, title, action, hash });
+    await newAction.save();
+    return {success: true};
+}
+
+const getAllActions = async () => {
+    const actions = await Action.find({});
+    return actions;
+}
+
+// BOT
 const getAccessToken = async (serviceName = 'vahu') => {
     try {
         const tokenDoc = await Token.findOne({ service: serviceName }).sort({ updatedAt: -1 });
@@ -102,13 +117,14 @@ const getContent = async (domain) => {
     }
 }
 
-const saveContent = async (domain, action, name, params) => {
+const saveContent = async (domain, type, action, params) => {
     const URL_SOLUTION_VAHU = process.env.URL_SOLUTION_VAHU;
 
     // const content = "Hello #name#, bạn đến từ #country#. Welcome to #platform#!";
     //  params: [['US, VN'], ['OpenAI']],
 
-    const vahu = await Action.findOne({ name }).lean();
+    const vahu = await Action.findOne({ action }).lean();
+    console.log(vahu)
     let { callback, hash, title } = vahu;
 
     let contentVahu = await getContent(domain);
@@ -123,14 +139,15 @@ const saveContent = async (domain, action, name, params) => {
         contentVahu = split.join("\n");
     }
 
-    if (action === "add") {
+    if (type === "add") {
         let replaceIndex = 0;
         callback = callback.replace(/#(.*?)#/g, (match) => {
             const replacement = params[replaceIndex];
             replaceIndex++;
             return replacement !== undefined ? replacement : match;
         });
-        callback = `\n\n//#${hash}\n//${title}\n${callback}\n//#${hash}`;
+        // callback = `\n\n//#${hash}\n//${title}\n${callback}\n//#${hash}`;
+        callback = `\n\n//${hash}\n${callback}\n//${hash}`;
         newContent = `${contentVahu}${callback}`;
     } else {
         newContent = contentVahu;
@@ -234,12 +251,15 @@ function splitContent(content) {
 
     return hookBlocks;
 }
+// End BOT
 
 const vahuService = {
     login,
     getContent,
     saveContent,
-    deleteContent
+    deleteContent,
+    getAllActions,
+    createAction
 };
 
 export default vahuService;

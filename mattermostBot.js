@@ -62,11 +62,11 @@ class MattermostWSBot {
             console.log(`Message from user ${userId}: ${msg}`);
             let question = msg.split(" ").splice(1).join(" ").trim().replace(/\s+/g, ' ');;
 
-            const commands = ["/help", "/vahu", '/solution'];
+            const commands = ["help", "vahu", 'solution'];
             const isCommand = commands.some(cmd => question.startsWith(cmd));
             if (isCommand) {
                 const command = commands.find(cmd => question.startsWith(cmd));
-                const content = question.slice(command.length);
+                const content = question.slice(command.length).trim();
                 this.handleCommand(command, content)
                     .then((textRes) => {
                         this.sendMessage(channelId, textRes, rootId);
@@ -117,24 +117,23 @@ class MattermostWSBot {
     async handleCommand(command, content) {
         console.log({ command, content })
         switch (command) {
-            case '/help':
-                return `Available Commands:\n- \`/solution <your solution>\`: Find a solution\n- \`/vahu <domain> [-d] <action> <params>\`: Automatic issue resolution`;
+            case 'help':
+                return `Available Commands:\n- \`solution <your solution>\`: Find a solution\n- \`vahu <domain> [-d] <action> [params]\`: Automatic issue resolution`;
 
-            case '/vahu': {
+            case 'vahu': {
                 const parts = content.trim().split(/\s+/);
 
                 let domain = '';
-                let name = '';
+                let action = '';
                 let params = [];
                 if (parts[0].includes('-d')) {
                     domain = parts[1];
-                    name = parts[2];
-                    console.log({ domain, name })
+                    action = parts[2];
                     try {
                         const response = await axios.delete(this.API_MM_VAHU, {
                             data: {
                                 domain,
-                                name
+                                action
                             }
                         });
                         const results = response.data;
@@ -147,11 +146,10 @@ class MattermostWSBot {
 
                 } else {
                     domain = parts[0];
-                    name = parts[1];
+                    action = parts[1];
                     params = parts.slice(2);
-
                     try {
-                        const response = await axios.post(this.API_MM_VAHU, { domain, name, params });
+                        const response = await axios.post(this.API_MM_VAHU, { domain, action, params });
                         const results = response.data;
                         if (results.success) {
                             return 'Completed';
@@ -163,8 +161,8 @@ class MattermostWSBot {
                 return '';
             }
 
-            case '/solution': {
-                if (!content) return '⚠️ Please provide the issue title after `/solution [issue title]`.';
+            case 'solution': {
+                if (!content) return 'Please provide the issue title after `solution [issue title]`.';
                 try {
                     const title = content.trim().replace(/\s+/g, ' ');
                     const response = await axios.get(`${this.API_MM_POST}?q=${title}`);
@@ -189,6 +187,5 @@ class MattermostWSBot {
         }
     }
 }
-
 
 export default MattermostWSBot;

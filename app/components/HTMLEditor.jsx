@@ -32,25 +32,18 @@ export default function HTMLEditor({ form, onChange }) {
             .replace(/\[url\](.*?)\[\/url\]/gi, '<a href="$1" target="_blank">$1</a>')
             .replace(/\[img\](.*?)\[\/img\]/gi, '<img src="$1" alt="image" />')
             .replace(/\[code\]([\s\S]*?)\[\/code\]/gi, (_, code) => {
-                return `<pre><div class="code-block">${escapeHtml(code.trim())}</div></pre>`;
+                return `<pre><div class="code-block">${escapeHtmlInCodeBlocks(code.trim())}</div></pre>`;
             })
             .replace(/\[quote\]([\s\S]*?)\[\/quote\]/gi, (_, group1) => {
                 return `<blockquote>${group1.trim().replace(/\n/g, '<br>')}</blockquote>`;
             })
             .replace(/\n/g, '<br>');
+        text = parseBBCodeWithTable(text);
         return text;
     };
 
-    function escapeHtml(html) {
-        return html
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
-
-    function parseBBCodeWithTable(text) {
+    function escapeHtmlInCodeBlocks(text) {
+        console.log(text)
         const escapeHtml = (str) =>
             str
                 .replace(/&/g, '&amp;')
@@ -59,27 +52,58 @@ export default function HTMLEditor({ form, onChange }) {
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
 
-        const convertTableBlock = (tableText) => {
-            const lines = tableText.trim().split('\n');
-            const filteredLines = lines.filter((line) => !/^\|\s*-+/.test(line));
+        console.log(escapeHtml(text))
+        return escapeHtml(text);
+    };
 
-            return `<table>
-      ${filteredLines
-                    .map((line, index) => {
-                        const cells = line.split('|').slice(1, -1).map((c) => c.trim());
-                        const tag = index === 0 ? 'th' : 'td';
-                        return `<tr>${cells.map((cell) => `<${tag}>${escapeHtml(cell)}</${tag}>`).join('')}</tr>`;
+    function parseBBCodeWithTable(text) {
+        const lines = text.split(/\r?<br>/);
+        let result = '';
+        let i = 0;
+        while (i < lines.length) {
+            if (/^\|.*\|$/.test(lines[i]) && /^\|\s*[-:| ]+\|$/.test(lines[i + 1] || '')) {
+                const headerLine = lines[i];
+                const separatorLine = lines[i + 1];
+                const bodyLines = [];
+
+                i += 2;
+                while (i < lines.length && /^\|.*\|$/.test(lines[i])) {
+                    bodyLines.push(lines[i]);
+                    i++;
+                }
+
+                const headers = headerLine
+                    .split('|')
+                    .slice(1, -1)
+                    .map((h) => `<th>${h.trim()}</th>`)
+                    .join('');
+
+                const body = bodyLines
+                    .map((line) => {
+                        const cells = line
+                            .split('|')
+                            .slice(1, -1)
+                            .map((c) => `<td>${c.trim()}</td>`)
+                            .join('');
+                        return `<tr>${cells}</tr>`;
                     })
-                    .join('\n')}
-    </table>`;
-        };
-
-        const tableRegex = /((?:^\|.*\n?){2,})/gm;
-        text = text.replace(tableRegex, (match) => {
-            return convertTableBlock(match);
-        });
-
+                    .join('\n');
+                result += `<table>
+                                <thead><tr>${headers}</tr></thead>
+                                <tbody>
+                                    ${body}
+                                </tbody>
+                            </table><br>`;
+            } else {
+                result += lines[i].includes("</pre>") ? lines[i] : lines[i] + '<br>';
+                i++;
+            }
+        }
+        return result.trim();
     }
+
+
+
 
     return (
         <div className="tab-area mb-10">

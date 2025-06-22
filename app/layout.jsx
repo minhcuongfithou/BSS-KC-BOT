@@ -1,5 +1,5 @@
+import NavLink from './components/NavLink';
 import './styles/global.css';
-
 export default function RootLayout({ children, title }) {
     return (
         <html lang="vi">
@@ -12,9 +12,10 @@ export default function RootLayout({ children, title }) {
                         <h2 className="logo">KC BOT</h2>
                         <nav>
                             <ul>
-                                <li><a href="./">Dashboard</a></li>
-                                <li><a href="./posts">Solution</a></li>
-                                <li><a href="./vahu">Vahu</a></li>
+                                <NavLink href="/introduction">Introduction</NavLink>
+                                <NavLink href="/posts">Solution</NavLink>
+                                <NavLink href="/vahu">Vahu</NavLink>
+                                <NavLink href="/timeline">Timeline</NavLink>
                             </ul>
                         </nav>
                     </aside>
@@ -26,7 +27,7 @@ export default function RootLayout({ children, title }) {
                             {children}
                         </section>
                         <footer className="footer">
-                            <p>❤️Made with by KC❤️</p>
+                            <p>Please contact cuongnm@bsscommerce.com (っ◕‿◕)っ</p>
                         </footer>
                     </div>
                 </div>

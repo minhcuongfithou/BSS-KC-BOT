@@ -3,10 +3,42 @@ import vahuService from '@/services/vahuService';
 import connectDB from '@/utils/mongodb';
 import { NextResponse } from 'next/server';
 
+export async function GET(req) {
+    await connectDB();
+    try {
+        const { searchParams } = new URL(req.url);
+        let q = searchParams.get('q');
+        let type = null;
+        if (q) {
+            type = q.endsWith('?') ? 'note' : 'solution';
+            q = q.replace("?", '');
+        }
+
+        let data;
+
+        if (!q && !type) {
+            data = await vahuService.getAllActions();
+        } else {
+            data = await vahuService.handleFuzzySearch(q, type);
+        }
+
+        return new Response(JSON.stringify({
+            success: true,
+            data,
+        }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+    } catch (error) {
+        return NextResponse.json({ sucess: false, message: error }, { status: 500 });
+    }
+}
+
 export async function POST(req) {
     await connectDB();
     try {
-        let { domain, name, params } = await req.json();
+        let { domain, action, params } = await req.json();
         console.log(typeof params)
         try {
             params = JSON.parse(params)
@@ -14,8 +46,8 @@ export async function POST(req) {
             console.error('!!!', error);
         }
 
-        console.log({ domain, name, params })
-        const result = await vahuService.saveContent(domain, "add", name, params);
+        console.log({ domain, action, params })
+        const result = await vahuService.saveContent(domain, "add", action, params);
 
         console.log({ result })
         if (result?.success) {
@@ -37,9 +69,9 @@ export async function POST(req) {
 export async function DELETE(req) {
     await connectDB();
     try {
-        const { domain, name } = await req.json();
+        const { domain, action } = await req.json();
 
-        const result = await vahuService.saveContent(domain, "delete", name);
+        const result = await vahuService.saveContent(domain, "delete", action);
 
         if (result?.success) {
             return NextResponse.json(

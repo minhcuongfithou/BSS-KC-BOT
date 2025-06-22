@@ -2,11 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import HTMLEditor from '@/app/components/HTMLEditor';
+import { ArrowLeft, Pencil } from 'lucide-react';
 
-export const metadata = {
-    title: 'Quản lý bài viết 123',
-    description: 'Trang quản lý bài viết của bạn'
-};
 export default function EditPostPage() {
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ title: '', content: '', author: '', type: 'note' });
@@ -50,8 +47,10 @@ export default function EditPostPage() {
 
     if (loading) return <></>;
 
-    return <div>
-        <h2>Thêm mới bài viết</h2>
+    return <div className='container'>
+        <h1> <span
+            onClick={() => router.back()}
+            className="back-text"> <ArrowLeft size={27}/> </span> <Pencil size={27}/> SOLUTION</h1>
         <form onSubmit={handleSubmit}>
             <input className='mb-10' type="text" placeholder="Tiêu đề" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <input className='mb-10' type="text" placeholder="Tác giả" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} />

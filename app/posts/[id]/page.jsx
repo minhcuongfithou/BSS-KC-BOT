@@ -2,9 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import HTMLEditor from '@/app/components/HTMLEditor';
+import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { ArrowLeft, Settings } from 'lucide-react';
 
 export default function EditPostPage() {
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [form, setForm] = useState({ title: '', content: '', author: '', type: 'note' });
     const [isFormChanged, setIsFormChanged] = useState(false);
 
@@ -28,7 +30,6 @@ export default function EditPostPage() {
     }, [form]);
 
     useEffect(() => {
-        setLoading(true);
         fetch(`/api/bot/post/${id}`)
             .then(res => res.json())
             .then(data => {
@@ -58,25 +59,26 @@ export default function EditPostPage() {
         if (res.ok) router.push('/posts');
     };
 
-    if (loading) return null;
+    if (loading) return <LoadingSpinner />
 
     return <div className="container">
-        <h1>Sửa bài viết</h1>
+        <h1> <span
+            onClick={() => router.back()}
+            className="back-text"> <ArrowLeft size={27}/> </span> <Settings size={27}/> SOLUTION</h1>
         <form onSubmit={handleUpdate}>
             <input className='mb-10' type="text" placeholder="Tiêu đề" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
             <input className='mb-10' type="text" placeholder="Tác giả" value={form.author} onChange={e => setForm({ ...form, author: e.target.value })} />
-            {!loading && <HTMLEditor
+            <HTMLEditor
                 form={form}
                 onChange={(newForm) => {
                     setForm(newForm);
                 }}
-            />}
-
+            />
             <select className='mb-10' value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
                 <option value="note">Note</option>
                 <option value="solution">Solution</option>
             </select>
-            <button className="btn btn-primary" type="submit" disabled={loading || !isFormChanged}>{loading ? 'waiting' : 'Edit'}</button>
+            <button className="btn btn-primary" type="submit" disabled={!isFormChanged}>{'Edit'}</button>
         </form>
     </div>
 }
