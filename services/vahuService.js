@@ -2,15 +2,23 @@ import axios from 'axios';
 import Token from '../models/Token';
 import dotenv from 'dotenv';
 import Action from '@/models/Action';
+import Handle from '@/models/Handle';
+import mongoose from 'mongoose';
+import { Handshake, LucideTable2 } from 'lucide-react';
 dotenv.config();
 
 // Backend
-const createAction = async(body) => {
-    const { title, action, callback } = body;
-    const hash = Buffer.from(action).toString('base64');
-    const newAction = new Action({ callback, title, action, hash });
-    await newAction.save();
-    return {success: true};
+const createAction = async (body) => {
+    try {
+        const { name, coreJs, listAction, listFilter } = body;
+        // const hash = Buffer.from(action).toString('base64');
+        const newAction = new Action({ name, coreJs, listAction, listFilter });
+        await newAction.save();
+        return { success: true };
+    } catch (err) {
+        console.log(err)
+        return { success: false };
+    }
 }
 
 const getAllActions = async () => {
@@ -53,7 +61,6 @@ const login = async () => {
         const setCookieHeader = response.headers['set-cookie'];
         if (setCookieHeader && setCookieHeader.length > 0) {
             const accessToken = setCookieHeader[0].split(';')[0];
-            console.log({ accessToken });
             return accessToken;
         } else {
             console.warn('Missing set-cookie header in the response');
@@ -117,47 +124,202 @@ const getContent = async (domain) => {
     }
 }
 
-const saveContent = async (domain, type, action, params) => {
-    const URL_SOLUTION_VAHU = process.env.URL_SOLUTION_VAHU;
-
-    // const content = "Hello #name#, bạn đến từ #country#. Welcome to #platform#!";
+const saveContent = async (author, domain, type, action, params) => {
+    console.log({author})
     //  params: [['US, VN'], ['OpenAI']],
+    const findAction = await Action.findOne({ name: action }).lean();
+    let handles = await Handle.find({ domain, actonId: findAction.id });
 
-    const vahu = await Action.findOne({ action }).lean();
-    console.log(vahu)
-    let { callback, hash, title } = vahu;
+    if (type === 'delete' && !handles) return { success: true };
 
-    let contentVahu = await getContent(domain);
-    let newContent = "";
+    const session = await mongoose.startSession();
+    try {
+        await session.withTransaction(async () => {
+            const update = await Handle.findOneAndUpdate({ domain, actionId: findAction._id }, { $set: { params, author } }, { new: true, session, upsert: true }).lean();
+            // update lai bien vua update
+            handles.map((handle, ind) => {
+                if(handle.actionId.equals(findAction._id)) {
+                    handles[ind] = update;
+                }
+            })
+            const newContentVahu = await _buildContentVahu(author, domain, handles);
 
-    const findHash = contentVahu.includes(hash);
-    if (findHash) {
-        let split = splitContent(contentVahu);
-        split = split.filter(block => {
-            return !block.includes(hash)
-        })
-        contentVahu = split.join("\n");
-    }
-
-    if (type === "add") {
-        let replaceIndex = 0;
-        callback = callback.replace(/#(.*?)#/g, (match) => {
-            const replacement = params[replaceIndex];
-            replaceIndex++;
-            return replacement !== undefined ? replacement : match;
+            const ok = await _checkValidContentVahu(domain, newContentVahu);
+            if (!ok) throw new Error('reject content');
         });
-        // callback = `\n\n//#${hash}\n//${title}\n${callback}\n//#${hash}`;
-        callback = `\n\n//${hash}\n${callback}\n//${hash}`;
-        newContent = `${contentVahu}${callback}`;
-    } else {
-        newContent = contentVahu;
-    }
-    const send = async (token, newContent) => {
-        console.log({ newContent, URL_SOLUTION_VAHU,  domain, token})
 
+        console.log('✅ Commit thành công');
+    } catch (e) {
+        console.log('❌ Rollback:', e.message);
+        return {success: false}
+    } finally {
+        await session.endSession();
+    }
+
+    return {success: true}
+};
+
+const _buildContentVahu = async (author, domain, handles) => {
+    let contentVahu = await getContent(domain);
+    const hash = 'code automatically generated';
+    // remove old code auto
+    const pattern = new RegExp(`\/\/ ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
+    contentVahu = contentVahu.replace(pattern, '').trim();
+    // end remove old code auto
+    let codeHandle = ``;
+    let listActionFilter = ``;
+    const allAction = new Set();
+    const allFilter = new Set();
+    await Promise.all(handles.map(async (handle) => {
+        const {createdAt, updatedAt} = handle;
+        let codeFuncInClass = ``;
+        const {params} = handle;
+        const action = await Action.findOne({ _id: handle.actionId }).lean();
+        if (!action) return;
+        let { coreJs, describe, name, listAction, listFilter } = action;
+        const className = name.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+
+        listAction = listAction.filter(filter => filter !== '');
+        let indexParams = 0;
+        if (listAction.length) {
+            listAction.forEach(action => {
+                const key = Object.keys(action)[0];
+                const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+                let callback = Object.values(action)[0];
+                // replace variant in calback
+                let replaceIndex = 0;
+                callback = callback.replace(/#(.*?)#/g, (match) => {
+                    const replacement = params[replaceIndex];
+                    replaceIndex++;
+                    return replacement !== undefined ? replacement : match;
+                });
+                indexParams = replaceIndex;
+                // end replace variant in calback
+                allAction.add(key);
+                codeFuncInClass += `${keyName}: ${callback},\n`;
+            });
+        } else {
+            console.warn(`listAction is empty`)
+        }
+
+        listFilter = listFilter.filter(filter => filter !== '');
+        if (listFilter.length) {
+            listFilter.forEach(filter => {
+                const key = Object.keys(filter)[0];
+                const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+                let callback = Object.values(filter)[0];
+                // replace variant in calback
+                let replaceIndex = 0;
+                callback = callback.replace(/#(.*?)#/g, (match) => {
+                    const replacement = params[indexParams + replaceIndex];
+                    replaceIndex++;
+                    return replacement !== undefined ? replacement : match;
+                });
+                // end replace variant in calback
+                allFilter.add(key);
+                codeFuncInClass += 
+`${keyName}: ${callback},\n`;
+            })
+        } else {
+            console.warn(`listFilter is empty`)
+        }
+
+        const hashClass = Buffer.from(name).toString('base64');
+        codeHandle += `// ${hashClass}
+// ${describe}
+// ** Implementer: ${author} **
+// ** Created at: ${_formatTimestamp(createdAt)} **
+// ** Updated at: ${_formatTimestamp(updatedAt)} **
+class ${className} extends BaseAction {
+    constructor() {
+        super();
+        this.handle = {
+            coreJS: () => {
+                ${coreJs}
+            },
+            ${codeFuncInClass.trim()}
+        };
+    }
+    static { BaseAction.register(this); }
+}
+// end ${hashClass}`;
+    }));
+
+        for (const key of allAction) {
+            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+            listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
+        }
+        for (const key of allFilter) {
+            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+            listActionFilter += `window.BSS_B2B.addFilter('${key}', combine.handle.${keyFunc});\n`;
+        }
+
+    const codeGenerate = `\n// ${hash}
+class BaseAction {
+    constructor() {
+        this.handle = {}
+    }
+    static #registry = new Set();
+    static register(sub) {
+        if (sub !== BaseAction) this.#registry.add(sub);
+    }
+    static getSubclasses() {
+        return Array.from(this.#registry);
+    }
+}
+
+class CombinedTask extends BaseAction {
+    constructor(...tasks) {
+        if (tasks.length === 1 && Array.isArray(tasks[0])) {
+            tasks = tasks[0];
+        }
+        super();
+
+        tasks.forEach(item => {
+            const taskInstance =
+                typeof item === "function" ? new item() : item;
+
+            for (const [name, fn] of Object.entries(taskInstance.handle)) {
+                if (typeof fn !== "function") continue;
+
+                if (this.handle[name]) {
+                    const prev = this.handle[name];
+                    this.handle[name] = (...args) => {
+                        prev(...args);
+                        fn(...args);
+                    };
+                } else {
+                    this.handle[name] = fn;
+                }
+            }
+        });
+    }
+}
+
+${codeHandle.trim()}
+
+const subclasses = BaseAction.getSubclasses();
+const combine = new CombinedTask(subclasses);
+
+combine.handle.coreJS();
+
+${listActionFilter.trim()}
+// end ${hash}
+    `
+
+    const newContentVahu = contentVahu + codeGenerate;
+    // console.log(newContentVahu)
+//             console.log(`${codeFuncInClass.trim()}`);
+// return;
+    return newContentVahu;
+}
+
+const _checkValidContentVahu = async (domain, newContentVahu) => {
+    const send = async (token, content) => {
+        const URL_SOLUTION_VAHU = process.env.URL_SOLUTION_VAHU;
         return axios.post(`${URL_SOLUTION_VAHU}${domain}`, {
             appType: "app_solution",
-            content: newContent
+            content: content
         }, {
             headers: {
                 'cookie': token,
@@ -169,9 +331,11 @@ const saveContent = async (domain, type, action, params) => {
 
     try {
         const token = await getAccessToken();
-        const res = await send(token, newContent);
-
-        if (res.data.status === 'success') return { success: true };
+        const res = await send(token, newContentVahu);
+        console.log(`OK: ${res.data}`)
+        if (res.data.status === 'success') {
+            return { success: true };
+        }
 
         return { success: false };
 
@@ -179,7 +343,7 @@ const saveContent = async (domain, type, action, params) => {
         if (err.message === 'EXPIRED_TOKEN') {
             try {
                 const newToken = await refreshToken();
-                const res = await send(newToken, newContent);
+                const res = await send(newToken, newContentVahu);
                 return {
                     success: res.data.status === 'success'
                 };
@@ -190,66 +354,17 @@ const saveContent = async (domain, type, action, params) => {
 
         return { success: false, error: err };
     }
-};
-
-const deleteContent = async (domain, name) => {
-
 }
 
-function splitContent(content) {
-    const lines = content.trim().split('\n');
-    const hookBlocks = [];
-    let currentBlock = [];
-    let currentTag = null;
+const _formatTimestamp = (ms) => {
+    const date = new Date(ms);
+    const dd = String(date.getDate()).padStart(2, '0');
+    const MM = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const hh = String(date.getHours()).padStart(2, '0');
+    const mm = String(date.getMinutes()).padStart(2, '0');
 
-    function pushBlock() {
-        if (currentBlock.length > 0) {
-            hookBlocks.push(currentBlock.join('\n').trim());
-            currentBlock = [];
-        }
-    }
-
-    for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-        const trimmed = line.trim();
-        const hashtagMatch = trimmed.match(/^\/\/#(\w+)/);
-
-        if (hashtagMatch) {
-            const tag = hashtagMatch[1];
-            if (currentTag === tag) {
-                currentBlock.push(line);
-                pushBlock();
-                currentTag = null;
-            }
-            else if (!currentTag) {
-                pushBlock();
-                currentTag = tag;
-                currentBlock.push(line);
-            }
-            else {
-                currentBlock.push(line);
-            }
-            continue;
-        }
-
-        if (currentTag) {
-            currentBlock.push(line);
-            continue;
-        }
-
-        currentBlock.push(line);
-
-        const isHookLine = /window\.BSS_B2B\.(addAction|addFilter)\(/.test(trimmed);
-        const isIIFEEnd = /^\}\)\(\);?$/.test(trimmed);
-
-        if (isHookLine || isIIFEEnd) {
-            pushBlock();
-        }
-    }
-
-    pushBlock();
-
-    return hookBlocks;
+    return `${dd}/${MM}/${yyyy} ${hh}:${mm}`;
 }
 // End BOT
 
@@ -257,7 +372,6 @@ const vahuService = {
     login,
     getContent,
     saveContent,
-    deleteContent,
     getAllActions,
     createAction
 };

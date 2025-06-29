@@ -23,7 +23,7 @@ class MattermostWSBot {
         this.API_MM_VAHU = apiMMVahu;
     }
 
-    async sendMessage(channelId, message = '', rootId = null) {
+    async sendMessage(channelId, message = '', rootId = null, userName) {
         try {
             const payload = {
                 channel_id: channelId,
@@ -48,17 +48,22 @@ class MattermostWSBot {
         }
     }
 
-    onMessage(data) {
+    async onMessage(data) {
         const msgData = JSON.parse(data);
         if (msgData.event === 'posted') {
             const postData = JSON.parse(msgData.data.post);
+            console.log({ postData })
             const userId = postData.user_id;
             const msg = postData.message;
             const channelId = postData.channel_id;
             const rootId = postData.root_id || postData.id;
             if (!msg.includes(`@${this.botUsername}`)) return;
             if (userId === this.botUserId) return;
+            // Chi rep trong KC BOT
+            if (postData.channel_id !== 'd51mgyu5cfdz3xo3b7q1o73qdh') return;
 
+            const user = await this.getUsername(postData.user_id);
+            const author = `${user.username} - ${user.nickname}`;
             console.log(`Message from user ${userId}: ${msg}`);
             let question = msg.split(" ").splice(1).join(" ").trim().replace(/\s+/g, ' ');;
 
@@ -67,7 +72,7 @@ class MattermostWSBot {
             if (isCommand) {
                 const command = commands.find(cmd => question.startsWith(cmd));
                 const content = question.slice(command.length).trim();
-                this.handleCommand(command, content)
+                this.handleCommand(author, command, content)
                     .then((textRes) => {
                         this.sendMessage(channelId, textRes, rootId);
                     })
@@ -114,7 +119,19 @@ class MattermostWSBot {
         connect();
     }
 
-    async handleCommand(command, content) {
+    async getUsername(userId) {
+        const res = await fetch(`${this.apiUrl}/users/${userId}`, {
+            headers: {
+                Authorization: `Bearer ${this.token}`
+            }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch user info');
+        const user = await res.json();
+        return user;
+    }
+
+    async handleCommand(author, command, content) {
         console.log({ command, content })
         switch (command) {
             case 'help':
@@ -132,8 +149,9 @@ class MattermostWSBot {
                     try {
                         const response = await axios.delete(this.API_MM_VAHU, {
                             data: {
+                                author,
                                 domain,
-                                action
+                                action,
                             }
                         });
                         const results = response.data;
@@ -143,13 +161,12 @@ class MattermostWSBot {
                     } catch (error) {
                         console.error('API call error:', error.message);
                     }
-
                 } else {
                     domain = parts[0];
                     action = parts[1];
                     params = parts.slice(2);
                     try {
-                        const response = await axios.post(this.API_MM_VAHU, { domain, action, params });
+                        const response = await axios.post(this.API_MM_VAHU, { author, domain, action, params });
                         const results = response.data;
                         if (results.success) {
                             return 'Completed';

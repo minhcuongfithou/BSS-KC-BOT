@@ -38,16 +38,13 @@ export async function GET(req) {
 export async function POST(req) {
     await connectDB();
     try {
-        let { domain, action, params } = await req.json();
-        console.log(typeof params)
+        let { author, domain, action, params } = await req.json();
         try {
-            params = JSON.parse(params)
+            params = JSON?.parse(params) ?? params;
         } catch (error) {
             console.error('!!!', error);
         }
-
-        console.log({ domain, action, params })
-        const result = await vahuService.saveContent(domain, "add", action, params);
+        const result = await vahuService.saveContent(author, domain, "add", action, params);
 
         console.log({ result })
         if (result?.success) {
@@ -69,9 +66,9 @@ export async function POST(req) {
 export async function DELETE(req) {
     await connectDB();
     try {
-        const { domain, action } = await req.json();
+        const { author, domain, action } = await req.json();
 
-        const result = await vahuService.saveContent(domain, "delete", action);
+        const result = await vahuService.saveContent(author, domain, "delete", action);
 
         if (result?.success) {
             return NextResponse.json(

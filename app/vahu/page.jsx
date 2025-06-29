@@ -44,7 +44,6 @@ export default function AllPostsPage() {
                     <tr>
                         <th width="10%" className="text-center">ID</th>
                         <th width="20%" className="text-center">Name</th>
-                        <th width="30%" className="text-center">Title</th>
                         <th width="12%" className="text-center">Action</th>
                     </tr>
                 </thead>
@@ -52,8 +51,7 @@ export default function AllPostsPage() {
                     {posts.map((post, index) => (
                         <tr key={index + 1}>
                             <td className="text-center">{index + 1}</td>
-                            <td>{post.action}</td>
-                            <td>{post.title}</td>
+                            <td>{post.name}</td>
                             <td className="text-center">
                                 <a className="btn btn-sm btn-primary" href={`/vahu/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />

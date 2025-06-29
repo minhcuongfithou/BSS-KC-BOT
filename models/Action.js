@@ -1,21 +1,25 @@
 import mongoose from 'mongoose';
 
 const actionSchema = new mongoose.Schema({
-    callback: {
-        type: String,
-        required: true,
-    },
-    title: {
+    name: {
         type: String,
         required: true,
         unique: true,
     },
-    action: {
+    describe: {
         type: String,
         required: true,
     },
-    hash: {
+    coreJs: {
         type: String,
+        required: true,
+    },
+    listAction: {
+        type: String,
+        required: true,
+    },
+    listFilter: {
+        type: Array,
         required: true,
     }
 });

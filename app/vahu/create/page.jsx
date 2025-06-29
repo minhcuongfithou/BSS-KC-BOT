@@ -3,18 +3,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, Pencil } from 'lucide-react';
 
+const formDefault = { name: '', coreJs: '', listAction: '', listFilter: '' };
 export default function CreateVahuPage() {
     const [isSubmit, setIsSubmit] = useState(false);
-    const [form, setForm] = useState({ title: '', action: '', callback: '' });
+    const [form, setForm] = useState(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
 
+    
+    const initialFormRef = useRef(formDefault);
     const router = useRouter();
-    const params = useParams();
-
-    const initialFormRef = useRef(form);
-
+    
     useEffect(() => {
-        const fields = ['title', 'action', 'callback'];
+        const fields = ['name', 'coreJs', 'listAction', 'listFilter'];
         const changed = fields.some(
             (field) => form[field] !== initialFormRef.current[field]
         );
@@ -49,14 +49,17 @@ export default function CreateVahuPage() {
             onClick={() => router.back()}
             className="back-text"> <ArrowLeft size={27} /> </span> <Pencil size={27} /> VAHU</h1>
         <form onSubmit={handleSubmit}>
-            <input className='mb-10' type="text" placeholder="Title" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-            <input className='mb-10' type="text" placeholder="Action name" value={form.action} onChange={e => setForm({ ...form, action: e.target.value })} />
+            <input className='mb-10' type="text" placeholder="Title" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} />
             <textarea
-                placeholder="Callback function"
+                placeholder="Core JS"
                 className="mb-10"
-                value={form.callback}
-                onChange={e => setForm({ ...form, callback: e.target.value })}
+                value={form.coreJs}
+                onChange={e => setForm({ ...form, coreJs: e.target.value })}
             />
+            <input className='mb-10' type="text" placeholder="List Action" value={form.listAction} onChange={e => setForm({ ...form, listAction: e.target.value })} />
+            <input className='mb-10' type="text" placeholder="List Filter" value={form.listFilter} onChange={e => setForm({ ...form, listFilter: e.target.value })} />
+            
+
             <button className="btn btn-primary" type="submit" disabled={!isFormChanged || isSubmit}>Create</button>
         </form>
     </div>
