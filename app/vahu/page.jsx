@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ClipboardList, Pencil, Trash2 } from 'lucide-react';
+import { ClipboardList, Pencil, Trash2, Eye } from 'lucide-react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
 
 export default function AllPostsPage() {
@@ -52,6 +52,10 @@ export default function AllPostsPage() {
                             <td className="text-center">{index + 1}</td>
                             <td>{post.name}</td>
                             <td className="text-center">
+                                <a className="btn btn-sm btn-primary" href={`/vahu/${post.name}`} style={{ marginRight: 8 }}>
+                                    <Eye size={20} className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Xem</span>
+                                </a>
                                 <a className="btn btn-sm btn-primary" href={`/vahu/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>

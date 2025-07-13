@@ -125,6 +125,7 @@ const getContent = async (domain) => {
 }
 
 const saveContent = async (author, domain, type, action, params) => {
+    console.log({ author, domain, type, action, params })
     //  params: [['US, VN'], ['OpenAI']],
     console.log({ author, domain, type, action, params })
     const findAction = await Action.findOne({ name: action }).lean();
@@ -152,7 +153,7 @@ const saveContent = async (author, domain, type, action, params) => {
 
         console.log('✅ Commit thành công');
     } catch (e) {
-        console.log('❌ Rollback:', { e });
+        console.log('❌ Rollback:', e, e.message);
         return { success: false }
     } finally {
         await session.endSession();
@@ -168,6 +169,7 @@ const _buildContentVahu = async (author, domain, handles) => {
     const pattern = new RegExp(`\/\/ start ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
     contentVahu = contentVahu.replace(pattern, '').trim();
     // end remove old code auto
+    console.log(2)
     let codeHandle = ``;
     let listActionFilter = ``;
     const allAction = new Set();
@@ -178,13 +180,16 @@ const _buildContentVahu = async (author, domain, handles) => {
         const { params } = handle;
         const action = await Action.findOne({ _id: handle.actionId }).lean();
         if (!action) return;
+        console.log({ action })
         let { coreJs, describe, name, listAction, listFilter } = action;
         const className = name.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
 
-        listAction = listAction.filter(action => !(typeof action === 'object' && action !== null && Object.keys(action).length === 0));
+        listAction = listAction.filter(item => !(typeof item === 'object' && Object.keys(item).length === 0));
+        console.log({listAction})
         let indexParams = 0;
         if (listAction.length) {
             listAction.forEach(action => {
+                console.log({action})
                 const key = Object.keys(action)[0];
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(action)[0];
@@ -197,19 +202,20 @@ const _buildContentVahu = async (author, domain, handles) => {
                 });
                 indexParams = replaceIndex;
                 // end replace variant in callback
-                if (deletedAt !== '') {
+                // if (deletedAt === '') {
                     allAction.add(key);
-                }
+                // }
                 codeFuncInClass += `${keyName}: ${callback},\n`;
             });
         } else {
             console.warn(`listAction is empty`)
         }
 
-        listFilter = listFilter.filter(filter => !(typeof filter === 'object' && filter !== null && Object.keys(filter).length === 0));
+        listFilter = listFilter.filter(filter => !(typeof filter === 'object' && Object.keys(filter).length === 0));
         if (listFilter.length) {
             listFilter.forEach(filter => {
                 const key = Object.keys(filter)[0];
+                console.log({key})
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(filter)[0];
                 // replace variant in callback
@@ -220,16 +226,16 @@ const _buildContentVahu = async (author, domain, handles) => {
                     return replacement !== undefined ? replacement : match;
                 });
                 // end replace variant in calback
-                if (deletedAt !== '') {
+                // if (deletedAt === '') {
                     allFilter.add(key);
-                }
+                // }
                 codeFuncInClass +=
                     `${keyName}: ${callback},\n`;
             })
         } else {
             console.warn(`listFilter is empty`)
         }
-
+ console.log({listFilter})
         const hashClass = Buffer.from(name).toString('base64');
         if (deletedAt) {
             const describeTask = `${_createCommentBox([`${describe}`, `** Implementer: ${author} **`, `** Created at : ${_formatTimestamp(createdAt)} **`, `** Deleted at : ${_formatTimestamp(deletedAt)} **`])}`;
@@ -254,15 +260,22 @@ class ${className} extends BaseAction {
 // end ${hashClass};\n`
         }
     }));
+    if (allAction.size) {
+        for (const key of allAction) {
+            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+            listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
+        }
+    }
+    console.log({allFilter})
+    if (allFilter.size) {
+        for (const key of allFilter) {
+            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+            listActionFilter += `window.BSS_B2B.addFilter('${key}', combine.handle.${keyFunc});\n`;
+        }
+    }
 
-    for (const key of allAction) {
-        const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
-        listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
-    }
-    for (const key of allFilter) {
-        const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
-        listActionFilter += `window.BSS_B2B.addFilter('${key}', combine.handle.${keyFunc});\n`;
-    }
+    console.log({listActionFilter})
+    
 
     const codeGenerate = `\n// start ${hash}
 class BaseAction {
@@ -315,8 +328,8 @@ ${listActionFilter.trim()}
 // end ${hash}`;
 
     const newContentVahu = contentVahu + codeGenerate;
-    console.log({ newContentVahu })
-    // console.log(`${codeFuncInClass.trim()}`);
+    // console.log(newContentVahu)
+    //             console.log(`${codeFuncInClass.trim()}`);
     // return;
     return newContentVahu;
 }

@@ -10,6 +10,14 @@ export default function TimelinePage() {
         'Feature Solution Archiving',
         'Feature Autocomplete'
       ]
+    },
+    {
+      version: '1.1.0',
+      date: '13/07/2025',
+      updates: [
+        'Deprecate Mattermost',
+        'Web UI',
+      ]
     }
   ];
 

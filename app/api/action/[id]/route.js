@@ -1,9 +1,6 @@
 import connectDB from '@/utils/mongodb';
 import Action from '@/models/Action';
 import { NextResponse } from 'next/server';
-import Handle from '@/models/Handle';
-import mongoose from 'mongoose';
-import vahuService from '@/services/vahuService';
 
 export async function GET(req, { params }) {
     await connectDB();
@@ -22,12 +19,12 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
     await connectDB();
 
-    const id = (await params).id;
+    const { id } = params;
 
     // if (!mongoose.Types.ObjectId.isValid(id)) {
     //     return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
     // }
-console.log(id)
+
     try {
         const data = await req.json();
 
@@ -40,18 +37,14 @@ console.log(id)
         //     new: true,
         //     runValidators: true,
         // });
-        switch(id) {
+        switch(name) {
             case 'custom-display-some-country': {
-                data.params = [data.listCountrySelected.join(',')];
-                // delete data.listCountrySelected;
-                data.author = "cuongnm_818 - KC",
-                data.name = id
+                data.
             }
         }
-console.log(data)
-        const updatedAction = await Handle.findOneAndUpdate(
-            { actionId: new mongoose.Types.ObjectId('685fb7a6c4ff5c8d331323a5'), domain: data.domain },
-            { $set: { ...data } },
+        const updatedAction = await Action.findOneAndUpdate(
+            { name: id },
+            { data },
             {
                 new: true,
                 runValidators: true,
@@ -63,10 +56,6 @@ console.log(data)
         if (!updatedAction) {
             return NextResponse.json({ message: 'Action not found' }, { status: 404 });
         }
-
-        // update trong vahu
-        const author = "cuongnm_818 - KC";
-        const result = await vahuService.saveContent(author, data.domain, "add", id, [`${data.listCountrySelected.map(code => `"${code}"`).join(',')}`]);
 
         return NextResponse.json(updatedAction);
     } catch (error) {
@@ -82,9 +71,8 @@ console.log(data)
 export async function DELETE(req, { params }) {
     await connectDB();
     const id = (await params).id;
-    const deletedAt = await req.json();
     try {
-        const deleted = await Action.findByIdAndUpdate(id, { deletedAt: deletedAt });
+        const deleted = await Action.findByIdAndDelete(id);
         if (!deleted) {
             return NextResponse.json({ message: 'Action not found' }, { status: 404 });
         }

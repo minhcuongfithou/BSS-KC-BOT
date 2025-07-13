@@ -12,6 +12,8 @@ export default function RootLayout({ children, title }) {
                         <h2 className="logo">KC BOT</h2>
                         <nav>
                             <ul>
+                                <NavLink href="/ui/">Introduction</NavLink>
+                                <NavLink href="/posts">Solution</NavLink>
                                 <NavLink href="/introduction">Introduction</NavLink>
                                 <NavLink href="/posts">Solution</NavLink>
                                 <NavLink href="/vahu">Vahu</NavLink>
