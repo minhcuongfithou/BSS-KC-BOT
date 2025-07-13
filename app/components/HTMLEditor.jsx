@@ -43,7 +43,6 @@ export default function HTMLEditor({ form, onChange }) {
     };
 
     function escapeHtmlInCodeBlocks(text) {
-        console.log(text)
         const escapeHtml = (str) =>
             str
                 .replace(/&/g, '&amp;')
@@ -52,7 +51,6 @@ export default function HTMLEditor({ form, onChange }) {
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
 
-        console.log(escapeHtml(text))
         return escapeHtml(text);
     };
 

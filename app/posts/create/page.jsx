@@ -34,7 +34,6 @@ export default function EditPostPage() {
             if (res.ok) {
                 router.push('/posts')
             } else {
-                console.log(res)
                 alert('Có lỗi xảy ra khi tạo bài viết.');
             }
         } catch (err) {

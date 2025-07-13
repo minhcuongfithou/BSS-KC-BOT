@@ -125,20 +125,22 @@ const getContent = async (domain) => {
 }
 
 const saveContent = async (author, domain, type, action, params) => {
-    console.log({author})
     //  params: [['US, VN'], ['OpenAI']],
+    console.log({ author, domain, type, action, params })
     const findAction = await Action.findOne({ name: action }).lean();
     let handles = await Handle.find({ domain, actonId: findAction.id });
 
     if (type === 'delete' && !handles) return { success: true };
-
+    let deletedAt = (type === 'delete' ? new Date().toISOString() : '');
     const session = await mongoose.startSession();
+
     try {
         await session.withTransaction(async () => {
-            const update = await Handle.findOneAndUpdate({ domain, actionId: findAction._id }, { $set: { params, author } }, { new: true, session, upsert: true }).lean();
+            const update = await Handle.findOneAndUpdate({ domain, actionId: findAction._id }, { $set: { params, author, deletedAt } }, { new: true, session, upsert: true }).lean();
+
             // update lai bien vua update
             handles.map((handle, ind) => {
-                if(handle.actionId.equals(findAction._id)) {
+                if (handle.actionId.equals(findAction._id)) {
                     handles[ind] = update;
                 }
             })
@@ -150,20 +152,20 @@ const saveContent = async (author, domain, type, action, params) => {
 
         console.log('✅ Commit thành công');
     } catch (e) {
-        console.log('❌ Rollback:', e.message);
-        return {success: false}
+        console.log('❌ Rollback:', { e });
+        return { success: false }
     } finally {
         await session.endSession();
     }
 
-    return {success: true}
+    return { success: true }
 };
 
 const _buildContentVahu = async (author, domain, handles) => {
     let contentVahu = await getContent(domain);
     const hash = 'code automatically generated';
     // remove old code auto
-    const pattern = new RegExp(`\/\/ ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
+    const pattern = new RegExp(`\/\/ start ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
     contentVahu = contentVahu.replace(pattern, '').trim();
     // end remove old code auto
     let codeHandle = ``;
@@ -171,15 +173,15 @@ const _buildContentVahu = async (author, domain, handles) => {
     const allAction = new Set();
     const allFilter = new Set();
     await Promise.all(handles.map(async (handle) => {
-        const {createdAt, updatedAt} = handle;
+        const { createdAt, updatedAt, deletedAt } = handle;
         let codeFuncInClass = ``;
-        const {params} = handle;
+        const { params } = handle;
         const action = await Action.findOne({ _id: handle.actionId }).lean();
         if (!action) return;
         let { coreJs, describe, name, listAction, listFilter } = action;
         const className = name.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
 
-        listAction = listAction.filter(filter => filter !== '');
+        listAction = listAction.filter(action => !(typeof action === 'object' && action !== null && Object.keys(action).length === 0));
         let indexParams = 0;
         if (listAction.length) {
             listAction.forEach(action => {
@@ -194,21 +196,23 @@ const _buildContentVahu = async (author, domain, handles) => {
                     return replacement !== undefined ? replacement : match;
                 });
                 indexParams = replaceIndex;
-                // end replace variant in calback
-                allAction.add(key);
+                // end replace variant in callback
+                if (deletedAt !== '') {
+                    allAction.add(key);
+                }
                 codeFuncInClass += `${keyName}: ${callback},\n`;
             });
         } else {
             console.warn(`listAction is empty`)
         }
 
-        listFilter = listFilter.filter(filter => filter !== '');
+        listFilter = listFilter.filter(filter => !(typeof filter === 'object' && filter !== null && Object.keys(filter).length === 0));
         if (listFilter.length) {
             listFilter.forEach(filter => {
                 const key = Object.keys(filter)[0];
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(filter)[0];
-                // replace variant in calback
+                // replace variant in callback
                 let replaceIndex = 0;
                 callback = callback.replace(/#(.*?)#/g, (match) => {
                     const replacement = params[indexParams + replaceIndex];
@@ -216,45 +220,51 @@ const _buildContentVahu = async (author, domain, handles) => {
                     return replacement !== undefined ? replacement : match;
                 });
                 // end replace variant in calback
-                allFilter.add(key);
-                codeFuncInClass += 
-`${keyName}: ${callback},\n`;
+                if (deletedAt !== '') {
+                    allFilter.add(key);
+                }
+                codeFuncInClass +=
+                    `${keyName}: ${callback},\n`;
             })
         } else {
             console.warn(`listFilter is empty`)
         }
 
         const hashClass = Buffer.from(name).toString('base64');
-        codeHandle += `// ${hashClass}
-// ${describe}
-// ** Implementer: ${author} **
-// ** Created at: ${_formatTimestamp(createdAt)} **
-// ** Updated at: ${_formatTimestamp(updatedAt)} **
+        if (deletedAt) {
+            const describeTask = `${_createCommentBox([`${describe}`, `** Implementer: ${author} **`, `** Created at : ${_formatTimestamp(createdAt)} **`, `** Deleted at : ${_formatTimestamp(deletedAt)} **`])}`;
+            codeHandle += `${describeTask}\n`;
+        } else {
+            const describeTask = `${_createCommentBox([`${describe}`, `** Implementer: ${author} **`, `** Created at : ${_formatTimestamp(createdAt)} **`, `** Updated at : ${_formatTimestamp(updatedAt)} **`])}`;
+
+            codeHandle += `// ${hashClass}
+${describeTask}
 class ${className} extends BaseAction {
     constructor() {
         super();
         this.handle = {
             coreJS: () => {
-                ${coreJs}
+            ${_indentMultiline(coreJs, '              ')}
             },
-            ${codeFuncInClass.trim()}
+            ${_indentMultiline(codeFuncInClass.trim(), '            ')}
         };
     }
     static { BaseAction.register(this); }
 }
-// end ${hashClass}`;
+// end ${hashClass};\n`
+        }
     }));
 
-        for (const key of allAction) {
-            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
-            listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
-        }
-        for (const key of allFilter) {
-            const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
-            listActionFilter += `window.BSS_B2B.addFilter('${key}', combine.handle.${keyFunc});\n`;
-        }
+    for (const key of allAction) {
+        const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+        listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
+    }
+    for (const key of allFilter) {
+        const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
+        listActionFilter += `window.BSS_B2B.addFilter('${key}', combine.handle.${keyFunc});\n`;
+    }
 
-    const codeGenerate = `\n// ${hash}
+    const codeGenerate = `\n// start ${hash}
 class BaseAction {
     constructor() {
         this.handle = {}
@@ -268,7 +278,7 @@ class BaseAction {
     }
 }
 
-class CombinedTask extends BaseAction {
+class CombinedAction extends BaseAction {
     constructor(...tasks) {
         if (tasks.length === 1 && Array.isArray(tasks[0])) {
             tasks = tasks[0];
@@ -296,21 +306,18 @@ class CombinedTask extends BaseAction {
     }
 }
 
-${codeHandle.trim()}
-
+${codeHandle}
 const subclasses = BaseAction.getSubclasses();
-const combine = new CombinedTask(subclasses);
-
+const combine = new CombinedAction(subclasses);
 combine.handle.coreJS();
 
 ${listActionFilter.trim()}
-// end ${hash}
-    `
+// end ${hash}`;
 
     const newContentVahu = contentVahu + codeGenerate;
-    // console.log(newContentVahu)
-//             console.log(`${codeFuncInClass.trim()}`);
-// return;
+    console.log({ newContentVahu })
+    // console.log(`${codeFuncInClass.trim()}`);
+    // return;
     return newContentVahu;
 }
 
@@ -331,8 +338,9 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
 
     try {
         const token = await getAccessToken();
+        console.log(`123`)
         const res = await send(token, newContentVahu);
-        console.log(`OK: ${res.data}`)
+        console.log(`OK: ${res.data.status}`)
         if (res.data.status === 'success') {
             return { success: true };
         }
@@ -340,6 +348,7 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
         return { success: false };
 
     } catch (err) {
+        console.log({ err })
         if (err.message === 'EXPIRED_TOKEN') {
             try {
                 const newToken = await refreshToken();
@@ -354,6 +363,34 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
 
         return { success: false, error: err };
     }
+}
+function _indentMultiline(str, indent) {
+    return str
+        .split('\n')
+        .map((line, index) => (index === 0 ? line : indent + line))
+        .join('\n');
+}
+
+const _createCommentBox = (lines) => {
+    const padding = 1;
+    const maxLength = Math.max(...lines.map(line => line.length));
+    const totalWidth = maxLength + padding * 2;
+    const horizontal = '─'.repeat(totalWidth);
+
+    const top = `┌${horizontal}┐`;
+    const bottom = `└${horizontal}┘`;
+
+    const content = lines.map(line => {
+        const spaces = ' '.repeat(totalWidth - line.length - padding - 1);
+        return `│ ${line}${spaces} │`;
+    });
+    return [
+        '/*',
+        top,
+        ...content,
+        bottom,
+        '*/'
+    ].join('\n');
 }
 
 const _formatTimestamp = (ms) => {

@@ -18,6 +18,9 @@ const handleSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Array,
         required: true,
     },
+    deletedAt: {
+        type: mongoose.Schema.Types.Date
+    },
 
 }, { timestamps: true });
 

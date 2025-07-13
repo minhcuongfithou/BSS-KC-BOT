@@ -12,7 +12,6 @@ export default function AllPostsPage() {
             const res = await fetch('/api/bot/vahu');
             const result = await res.json();
             if (result.success) {
-                console.log(result)
                 setPosts(result.data || []);
             }
         } finally {

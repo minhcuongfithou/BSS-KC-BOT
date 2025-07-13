@@ -1,7 +1,7 @@
 export default function Introduction() {
   return (
     <main>
-      <h1>📌 Dashbaord</h1>
+      <h1>📌 Dashboard</h1>
     </main>
   );
 }

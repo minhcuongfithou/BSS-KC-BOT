@@ -14,7 +14,6 @@ export default function AllPostsPage() {
             const res = await fetch('/api/bot/post');
             const result = await res.json();
             if (result.success) {
-                console.log(result)
                 setPosts(result.data || []);
             }
         } finally {
@@ -27,7 +26,6 @@ export default function AllPostsPage() {
     }, []);
 
     async function handleDelete(postId) {
-        console.log({ postId })
         const res = await fetch(`/api/bot/post/${postId}`, {
             method: 'DELETE',
         });

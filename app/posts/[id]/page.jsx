@@ -25,7 +25,7 @@ export default function EditPostPage() {
         const changed = fields.some(
             (field) => form[field] !== initialFormRef.current[field]
         );
-        console.log(initialFormRef.current)
+        (initialFormRef.current)
         setIsFormChanged(changed);
     }, [form]);
 

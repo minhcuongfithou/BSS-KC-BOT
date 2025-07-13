@@ -34,8 +34,9 @@ export async function PUT(req, { params }) {
 export async function DELETE(req, { params }) {
     await connectDB();
     const id = (await params).id;
+    const deletedAt = await req.json();
     try {
-        const deleted = await Action.findByIdAndDelete(id);
+        const deleted = await Action.findByIdAndUpdate(id, { deletedAt: deletedAt });
         if (!deleted) {
             return NextResponse.json({ message: 'Action not found' }, { status: 404 });
         }

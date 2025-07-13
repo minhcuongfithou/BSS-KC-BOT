@@ -1,4 +1,5 @@
 
+import Handle from '@/models/Handle';
 import vahuService from '@/services/vahuService';
 import connectDB from '@/utils/mongodb';
 import { NextResponse } from 'next/server';
@@ -44,9 +45,8 @@ export async function POST(req) {
         } catch (error) {
             console.error('!!!', error);
         }
-        const result = await vahuService.saveContent(author, domain, "add", action, params);
+        const result = await vahuService.saveContent(author, domain, "add", action, params, '');
 
-        console.log({ result })
         if (result?.success) {
             return NextResponse.json(
                 { success: true },
@@ -67,7 +67,7 @@ export async function DELETE(req) {
     await connectDB();
     try {
         const { author, domain, action } = await req.json();
-
+        const params = '';
         const result = await vahuService.saveContent(author, domain, "delete", action);
 
         if (result?.success) {

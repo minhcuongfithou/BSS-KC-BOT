@@ -33,7 +33,6 @@ export default function CreateVahuPage() {
             if (res.ok) {
                 router.push('/vahu')
             } else {
-                console.log(res)
                 alert('Có lỗi xảy ra khi tạo bài viết.');
             }
         } catch (err) {

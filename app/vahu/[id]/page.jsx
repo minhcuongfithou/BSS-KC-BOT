@@ -24,8 +24,6 @@ export default function EditVahuPage() {
         const changed = fields.some(
             (field) => form[field] !== initialFormRef.current[field]
         );
-        console.log(initialFormRef.current)
-        console.log(form)
         setIsFormChanged(changed);
     }, [form]);
 
@@ -33,7 +31,6 @@ export default function EditVahuPage() {
         fetch(`/api/vahu/${id}`)
             .then(res => res.json())
             .then(data => {
-                console.log({ data })
                 const cleanData = {
                     title: data.title || '',
                     callback: data.callback || '',

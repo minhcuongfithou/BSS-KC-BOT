@@ -7,7 +7,6 @@ async function handleGetAllPosts() {
 }
 
 async function handleFuzzySearch(query, type) {
-    // console.log({query, type})
     let exact = await searchService.findExactPostByTitle(query);
 
     if (exact) {
