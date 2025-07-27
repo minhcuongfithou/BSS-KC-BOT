@@ -20,6 +20,7 @@ body {
 header {
     display: flex;
     justify-content: flex-end;
+    padding: 4px 6px;
 }
 
 .logo {
@@ -169,7 +170,7 @@ textarea {
     border: none;
     padding: 0.5rem 1.2rem;
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 500;
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.25s ease, opacity 0.2s ease;
@@ -346,8 +347,7 @@ pre {
 .content {
     margin-left: 200px;
     flex-grow: 1;
-    padding: 2rem;
-    background-color: #f9fafb;
+    background-color: #fff;
 }
 
 .footer {
@@ -421,4 +421,65 @@ pre {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+strong {
+    font-weight: 600;
+}
+
+
+/* loading call api when done domain */
+.input-with-spinner {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.input-with-spinner input {
+    width: 100%;
+    padding-right: 50px;
+    /* để chừa khoảng cho spinner */
+}
+
+.spinner-inline {
+    position: absolute;
+    right: 10px;
+    top: calc(50% - 4px);
+    transform: translateY(-50%);
+    display: flex;
+    gap: 4px;
+}
+
+.spinner-inline .dot {
+    width: 6px;
+    height: 6px;
+    background-color: #333;
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out both;
+}
+
+.spinner-inline .dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.spinner-inline .dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+    }
+
+    40% {
+        transform: scale(1);
+    }
+}
+
+.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    cursor: not-allowed;
 }

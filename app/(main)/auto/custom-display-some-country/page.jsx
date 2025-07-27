@@ -1,9 +1,10 @@
 'use client'
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter, useParams, usePathname } from 'next/navigation';
 import '@/app/styles/checkbox.css';
 import { ArrowLeft } from 'lucide-react';
 import { useUser } from '@/app/context/UserContext';
+import Toast from '@/app/components/Toast';
 const listCountry = [
     {
         "label": "Afghanistan",
@@ -993,10 +994,14 @@ const formDefault = {
     listCountrySelected: [],
 }
 
-function arrayEqual(arr1, arr2) {
-    if (arr1.length !== arr2.length) return false;
-    return arr1.every((v, i) => v === arr2[i]);
-}
+// function arrayEqual(arr1, arr2) {
+//     if (arr1.length !== arr2.length) return false;
+//     return arr1.every((v, i) => v === arr2[i]);
+// }
+
+const isValidShopifyDomain = (domain) => {
+    return typeof domain === 'string' && domain.endsWith('.myshopify.com') && !domain.startsWith('httpF');
+};
 
 export default function CreateVahuPage() {
     const pathname = usePathname();
@@ -1007,9 +1012,17 @@ export default function CreateVahuPage() {
     const initialFormRef = useRef(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
     // const initialFormRef = useRef(formDefault);
+
     const session = useUser();
     const router = useRouter();
-
+    const [toastKey, setToastKey] = useState(0);
+    const [toastMessage, setToastMessage] = useState('');
+    const [showToast, setShowToast] = useState(false);
+    const [loadingDomain, setLoadingDomain] = useState(false);
+    const prevDomain = useRef('');
+    useEffect(() => {
+        prevDomain.current = form.domain;
+    }, []);
     // useEffect(() => {
     //     // fetch(`/api/vahu/${id}`)
     //     //     .then(res => res.json())
@@ -1030,7 +1043,12 @@ export default function CreateVahuPage() {
     //     //         setLoading(false);
     //     //     });
     // }, []);
-
+    const showToastMessage = useCallback((message) => {
+        setToastMessage(message);
+        setShowToast(false);
+        setToastKey(prev => prev + 1);
+        setShowToast(true);
+    }, []);
 
     // useEffect(() => {
     //     const changed = ['domain', 'listCountrySelected'].some((field) => {
@@ -1078,8 +1096,9 @@ export default function CreateVahuPage() {
                 body: JSON.stringify(form),
             });
             if (!res.ok) {
-                throw new Error("Custom vahu fail");
+                showToastMessage('Có lỗi xảy ra, vui lòng kiểm tra lại hoặc liên hệ nhà phát triển');
             }
+            showToastMessage('Cập nhật thông tin thành công');
         } catch (err) {
             throw new Error("Server Error");
         } finally {
@@ -1087,10 +1106,56 @@ export default function CreateVahuPage() {
         }
     };
 
+    const handleDomainBlur = async (e) => {
+        showToastMessage('Không có thông tin, nhưng bạn có thể tạo mới');
+        const currentDomain = form.domain.trim();
+        const oldDomain = prevDomain.current.trim();
+        prevDomain.current = currentDomain;
+        console.log(prevDomain.current)
+        console.log(currentDomain)
+        if (!isValidShopifyDomain(currentDomain)) {
+            console.log(111)
+            showToastMessage('Domain không hợp lệ');
+            return;
+        }
+        if (currentDomain === oldDomain || currentDomain.trim().length === 0) return;
+        setLoadingDomain(true);
+        try {
+            const query = new URLSearchParams(form).toString();
+            const res = await fetch(`/api/auto/${actionVahu}?${query}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            if (!res.ok) {
+                showToastMessage('Không có thông tin, nhưng bạn có thể tạo mới');
+                setForm((prev) => ({
+                    ...prev,
+                    page: '',
+                    language: ''
+                }));
+            } else {
+                showToastMessage('Đã có thông tin trước đó, nhưng bạn có thể sửa đổi');
+                const resReponse = await res.json();
+                // setForm((prev) => ({
+                //     ...prev,
+                //     page: resReponse.params[1],
+                //     language: detectLanguage(resReponse.params[0], dataLanguage)
+                // }));
+                console.log(resReponse)
+            }
+        } catch (err) {
+            console.log(err)
+            throw new Error("Server Error");
+        } finally {
+            setLoadingDomain(false);
+        }
+    };
+
     if (loading) return <></>;
 
     return (
-        <div className="container">
+        <><div className="container">
             <form onSubmit={handleSubmit}>
                 <h1 className="title-vahu">
                     <span onClick={() => router.back()} className="back-text"> <ArrowLeft size={27} /> </span>
@@ -1100,16 +1165,26 @@ export default function CreateVahuPage() {
                     1. Hãy điền thông tin domain khách hàng
                 </p>
 
-                <input
-                    className="mb-10"
-                    type="text"
-                    placeholder="ex: dev-cuong-nm-store.myshopify.com"
-                    value={form.domain}
-                    onChange={(e) =>
-                        setForm((prev) => ({ ...prev, domain: e.target.value }))
-                    }
-                />
-
+                <div className="input-with-spinner">
+                    <input
+                        className="mb-10"
+                        type="text"
+                        placeholder="ex: dev-cuong-nm-store.myshopify.com"
+                        value={form.domain}
+                        onChange={(e) =>
+                            setForm((prev) => ({ ...prev, domain: e.target.value }))
+                        }
+                        onBlur={handleDomainBlur}
+                    />
+                    {loadingDomain && (
+                        <div className="spinner-inline">
+                            <span className="dot"></span>
+                            <span className="dot"></span>
+                            <span className="dot"></span>
+                        </div>
+                    )}
+                </div>
+                <div className={(loadingDomain || form.domain.trim().length === 0 || prevDomain.current.trim().length === 0 || !isValidShopifyDomain(form.domain)) ? 'disabled' : ''}>
                 <p className="label">
                     2. Chọn danh sách các quốc gia sẽ hiển thị
                 </p>
@@ -1159,6 +1234,7 @@ export default function CreateVahuPage() {
                         ))}
                     </tbody>
                 </table>
+                </div>
                 <br />
                 <div className="text-center">
                     <button
@@ -1169,8 +1245,10 @@ export default function CreateVahuPage() {
                         Custom
                     </button>
                 </div>
-            </form>
+            </form >
         </div>
+        {showToast && <Toast key={toastKey} show={true} message={toastMessage} />}
+        </>
     );
 
 }

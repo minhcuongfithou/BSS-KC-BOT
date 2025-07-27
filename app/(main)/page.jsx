@@ -26,27 +26,16 @@ export default function MainPage() {
             <div className="section">
                 <h3>2. Tính năng hướng dẫn</h3>
                 <ul>
-                    <li>"Làm sao để reset mật khẩu cho khách hàng?"</li>
-                    <li>"Hướng dẫn xử lý lỗi thanh toán bị treo"</li>
-                    <li>"Khách hàng không nhận được email xác thực"</li>
+                    <li>Tìm kiếm các hướng dẫn giải quyết một số vấn đề cụ thể</li>
+                    <li>Các bài được phân loại qua tag, module</li>
                 </ul>
             </div>
 
             <div className="section">
                 <h3>3. Tính năng tự động xử lý</h3>
                 <ul>
-                    <li>Gửi lại email xác nhận</li>
-                    <li>Tạo form yêu cầu hoàn tiền</li>
-                    <li>Kích hoạt lại tài khoản bị khoá</li>
-                </ul>
-            </div>
-
-            <div className="note">
-                💡 <strong>Lưu ý:</strong>
-                <ul>
-                    <li>1</li>
-                    <li>2</li>
-                    <li>3</li>
+                    <li>Giao diện web đơn giản, thuận tiện cho tất cả mọi người</li>
+                    <li>Tương tác với VAHU, có thể tự động thêm các đoạn code để giải quyết một số task</li>
                 </ul>
             </div>
         </div>

@@ -49,3 +49,13 @@
     background-color: #ddf4ff;
     border-color: #b6e3ff;
 }
+
+
+/* use */
+
+/* <div className="tag-container">
+    <span className="tag-label">Tags:</span>
+    <span className="badge badge-green">Feature</span>
+    <span className="badge badge-red">Bug</span>
+    <span className="badge badge-warning">Custom</span>
+</div> */

@@ -147,7 +147,7 @@ export default function ViewPostPage() {
         <h1> <span
             onClick={() => router.back()}
             className="back-text"> <ArrowLeft size={27} /> </span> <Settings size={27} /> SOLUTION</h1>
-        <h3>{form.title}</h3>
+        <h3 style={{ marginBottom: '6px' }}>{form.title}</h3>
         <i>By {form.author}</i>
         <div className="preview-post" dangerouslySetInnerHTML={{ __html: parseBBCode(form.content) }}>
         </div>

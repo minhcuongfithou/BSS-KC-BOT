@@ -1,19 +1,41 @@
 import connectDB from '@/utils/mongodb';
 import Action from '@/models/Action';
-import { NextResponse } from 'next/server';
 import Handle from '@/models/Handle';
+import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import vahuService from '@/services/vahuService';
 
 export async function GET(req, { params }) {
     await connectDB();
+    // const { id } = (await params);
+    // try {
+    //     const action = await Action.findById(id);
+    //     if (!action) {
+    //         return NextResponse.json({ message: 'Action not found' }, { status: 404 });
+    //     }
+    //     return NextResponse.json(action, { status: 200 });
+    // } catch (error) {
+    //     return NextResponse.json({ message: 'Server error', error }, { status: 500 });
+    // }
+
+
     const id = (await params).id;
+    const { searchParams } = new URL(req.url);
+    const domain = searchParams.get('domain');
+    console.log({ id, domain })
     try {
-        const action = await Action.findById(id);
-        if (!action) {
-            return NextResponse.json({ message: 'Action not found' }, { status: 404 });
+        // 1. Tìm action theo name
+        const action = await Action.findOne({ name: id }).lean();
+        if (!action) return null;
+
+        const actionId = action._id;
+
+        // 2. Tìm handle theo actionId và domain
+        const handle = await Handle.findOne({ actionId, domain }).lean();
+        if (!handle) {
+            return NextResponse.json({ message: 'Handle not found' }, { status: 404 });
         }
-        return NextResponse.json(action, { status: 200 });
+        return NextResponse.json(handle, { status: 200 });
     } catch (error) {
         return NextResponse.json({ message: 'Server error', error }, { status: 500 });
     }

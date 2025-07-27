@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Pencil, ClipboardList, Trash2, Eye } from 'lucide-react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import '@/app/styles/badge.css';
 
 export default function AllPostsPage() {
     const [loading, setLoading] = useState(true);
@@ -57,8 +58,8 @@ export default function AllPostsPage() {
                             <td className="text-center">{index + 1}</td>
                             <td>{post.title}</td>
                             <td className="text-center">{post.author}</td>
-                            <td className="text-center"><span title={post.type}>{post.type === 'solution' ? '✔️' : '✏️'}</span></td>
-                            <td>{new Date(post.updated_at).toLocaleString()}</td>
+                            <td className="text-center"><span title={post.type}>{post.type === 'solution' ? <span className="badge badge-green">Solution</span> : <span className="badge badge-warning">Note</span>}</span></td>
+                            <td className="text-center">{new Date(post.updated_at).toLocaleString()}</td>
                             <td className="text-center">
                                 <a className="btn btn-sm btn-primary" href={`/posts/view/${post._id}`} style={{ marginRight: 8 }}>
                                     <Eye size={20} className="h-4 w-4" />

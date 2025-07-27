@@ -60,13 +60,39 @@ class CombinedAction extends BaseAction {
     }
 }
 
+// Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5
+/*
+┌─────────────────────────────────────────────────────────────────┐
+│ Custom chỉ show một vài quốc gia nhất định -- Registration Form │
+│ ** Implementer: mcvp9x@gmail.com **                             │
+│ ** Created at : 29/06/2025 22:31 **                             │
+│ ** Updated at : 27/07/2025 22:47 **                             │
+└─────────────────────────────────────────────────────────────────┘
+*/
+class customDisplaySomeCountry extends BaseAction {
+    constructor() {
+        super();
+        this.handle = {
+            coreJS: () => {
+            
+            },
+            customRfCountry: (...data) => {  
+              const defaultCountries = data[0];
+              const countryList = ["BN","BG"];
+              return defaultCountries.filter(country => countryList.includes(country.value));
+            },
+        };
+    }
+    static { BaseAction.register(this); }
+}
+// end Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5;
 // Y3VzdG9tLWNvbmZpcm0tcGFzc3dvcmQ=
 /*
 ┌──────────────────────────────────────────────────┐
 │ Thêm field confirm password -- Registration Form │
-│ ** Implementer: undefined **                     │
+│ ** Implementer: mcvp9x@gmail.com **              │
 │ ** Created at : 29/06/2025 22:35 **              │
-│ ** Updated at : 26/07/2025 21:39 **              │
+│ ** Updated at : 27/07/2025 22:44 **              │
 └──────────────────────────────────────────────────┘
 */
 class customConfirmPassword extends BaseAction {
@@ -178,32 +204,6 @@ class customConfirmPassword extends BaseAction {
     static { BaseAction.register(this); }
 }
 // end Y3VzdG9tLWNvbmZpcm0tcGFzc3dvcmQ=;
-// Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5
-/*
-┌─────────────────────────────────────────────────────────────────┐
-│ Custom chỉ show một vài quốc gia nhất định -- Registration Form │
-│ ** Implementer: undefined **                                    │
-│ ** Created at : 29/06/2025 22:31 **                             │
-│ ** Updated at : 26/07/2025 21:29 **                             │
-└─────────────────────────────────────────────────────────────────┘
-*/
-class customDisplaySomeCountry extends BaseAction {
-    constructor() {
-        super();
-        this.handle = {
-            coreJS: () => {
-            
-            },
-            customRfCountry: (...data) => {  
-              const defaultCountries = data[0];
-              const countryList = ["AF","AU"];
-              return defaultCountries.filter(country => countryList.includes(country.value));
-            },
-        };
-    }
-    static { BaseAction.register(this); }
-}
-// end Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5;
 
 const subclasses = BaseAction.getSubclasses();
 const combine = new CombinedAction(subclasses);

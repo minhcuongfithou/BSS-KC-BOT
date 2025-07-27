@@ -14,7 +14,7 @@ export default function LoginPage() {
                         alt="Google logo"
                         className="google-icon"
                     />
-                    <span>Login with Google</span>
+                    <span>Sign in with Google</span>
                 </button>
             </div>
         </div >
