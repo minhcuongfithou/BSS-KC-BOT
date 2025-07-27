@@ -4,9 +4,20 @@ import dotenv from 'dotenv';
 import Action from '@/models/Action';
 import Handle from '@/models/Handle';
 import mongoose from 'mongoose';
-import { Handshake, LucideTable2 } from 'lucide-react';
+import { writeFile } from 'fs/promises';
+import path from 'path';
+
 dotenv.config();
 
+// ham rac
+async function writeFileTest(content){
+    const filePath = path.join(process.cwd(), 'public', 'output.txt');
+
+  try {
+    await writeFile(filePath, content, 'utf8');
+  } catch (err) {
+  }
+}
 // Backend
 const createAction = async (body) => {
     try {
@@ -125,9 +136,7 @@ const getContent = async (domain) => {
 }
 
 const saveContent = async (author, domain, type, action, params) => {
-    console.log({ author, domain, type, action, params })
-    //  params: [['US, VN'], ['OpenAI']],
-    console.log({ author, domain, type, action, params })
+    console.log({author, domain, type, action, params})
     const findAction = await Action.findOne({ name: action }).lean();
     let handles = await Handle.find({ domain, actonId: findAction.id });
 
@@ -146,6 +155,7 @@ const saveContent = async (author, domain, type, action, params) => {
                 }
             })
             const newContentVahu = await _buildContentVahu(author, domain, handles);
+            await writeFileTest(newContentVahu)
 
             const ok = await _checkValidContentVahu(domain, newContentVahu);
             if (!ok) throw new Error('reject content');
@@ -169,7 +179,6 @@ const _buildContentVahu = async (author, domain, handles) => {
     const pattern = new RegExp(`\/\/ start ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
     contentVahu = contentVahu.replace(pattern, '').trim();
     // end remove old code auto
-    console.log(2)
     let codeHandle = ``;
     let listActionFilter = ``;
     const allAction = new Set();
@@ -180,16 +189,21 @@ const _buildContentVahu = async (author, domain, handles) => {
         const { params } = handle;
         const action = await Action.findOne({ _id: handle.actionId }).lean();
         if (!action) return;
-        console.log({ action })
+        // console.log({ action })
         let { coreJs, describe, name, listAction, listFilter } = action;
         const className = name.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
-
-        listAction = listAction.filter(item => !(typeof item === 'object' && Object.keys(item).length === 0));
-        console.log({listAction})
+        let replaceIndex = 0;
         let indexParams = 0;
+        coreJs = coreJs.replace(/#(.*?)#/g, (match) => {
+            const replacement = (typeof params[replaceIndex] === 'object') ? JSON.stringify(params[replaceIndex]) : params[replaceIndex];
+            replaceIndex++;
+            return replacement !== undefined ? replacement : match;
+        });
+        listAction = listAction.filter(item => !(typeof item === 'object' && Object.keys(item).length === 0));
+        // console.log({ listAction })
         if (listAction.length) {
             listAction.forEach(action => {
-                console.log({action})
+                // console.log({ action })
                 const key = Object.keys(action)[0];
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(action)[0];
@@ -203,7 +217,7 @@ const _buildContentVahu = async (author, domain, handles) => {
                 indexParams = replaceIndex;
                 // end replace variant in callback
                 // if (deletedAt === '') {
-                    allAction.add(key);
+                allAction.add(key);
                 // }
                 codeFuncInClass += `${keyName}: ${callback},\n`;
             });
@@ -215,7 +229,7 @@ const _buildContentVahu = async (author, domain, handles) => {
         if (listFilter.length) {
             listFilter.forEach(filter => {
                 const key = Object.keys(filter)[0];
-                console.log({key})
+                console.log({ key })
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(filter)[0];
                 // replace variant in callback
@@ -227,7 +241,7 @@ const _buildContentVahu = async (author, domain, handles) => {
                 });
                 // end replace variant in calback
                 // if (deletedAt === '') {
-                    allFilter.add(key);
+                allFilter.add(key);
                 // }
                 codeFuncInClass +=
                     `${keyName}: ${callback},\n`;
@@ -235,7 +249,7 @@ const _buildContentVahu = async (author, domain, handles) => {
         } else {
             console.warn(`listFilter is empty`)
         }
- console.log({listFilter})
+        // console.log({ listFilter })
         const hashClass = Buffer.from(name).toString('base64');
         if (deletedAt) {
             const describeTask = `${_createCommentBox([`${describe}`, `** Implementer: ${author} **`, `** Created at : ${_formatTimestamp(createdAt)} **`, `** Deleted at : ${_formatTimestamp(deletedAt)} **`])}`;
@@ -266,7 +280,7 @@ class ${className} extends BaseAction {
             listActionFilter += `window.BSS_B2B.addAction('${key}', combine.handle.${keyFunc});\n`;
         }
     }
-    console.log({allFilter})
+    // console.log({ allFilter })
     if (allFilter.size) {
         for (const key of allFilter) {
             const keyFunc = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
@@ -274,8 +288,8 @@ class ${className} extends BaseAction {
         }
     }
 
-    console.log({listActionFilter})
-    
+    // console.log({ listActionFilter })
+
 
     const codeGenerate = `\n// start ${hash}
 class BaseAction {
@@ -351,9 +365,9 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
 
     try {
         const token = await getAccessToken();
-        console.log(`123`)
+        // console.log(`123`)
         const res = await send(token, newContentVahu);
-        console.log(`OK: ${res.data.status}`)
+        // console.log(`OK: ${res.data.status}`)
         if (res.data.status === 'success') {
             return { success: true };
         }
@@ -361,7 +375,7 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
         return { success: false };
 
     } catch (err) {
-        console.log({ err })
+        // console.log({ err })
         if (err.message === 'EXPIRED_TOKEN') {
             try {
                 const newToken = await refreshToken();

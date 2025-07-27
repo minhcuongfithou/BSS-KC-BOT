@@ -1,9 +1,14 @@
 import '@/app/styles/loading.css';
 
 export default function LoadingSpinner() {
-  return (
-    <div className="loading-wrapper">
-      <div className="spinner" />
-    </div>
-  );
+    return (
+        <div className="loader-container">
+            <div className="dot-loader">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+    );
 }

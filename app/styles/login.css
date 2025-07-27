@@ -1,0 +1,17 @@
+.container-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+.container-login > div {
+    transform: translateY(-46px);
+}
+.container-login .google-login-btn {
+    margin: auto;
+}
+
+body {
+    margin: 0;
+    font-family: 'Be Vietnam Pro', sans-serif;
+}

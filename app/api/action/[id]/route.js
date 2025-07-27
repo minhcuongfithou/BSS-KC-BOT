@@ -51,7 +51,7 @@ export async function PUT(req, { params }) {
             }
         );
 
-        console.log({ updatedAction })
+        // console.log({ updatedAction })
 
         if (!updatedAction) {
             return NextResponse.json({ message: 'Action not found' }, { status: 404 });

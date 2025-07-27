@@ -24,7 +24,7 @@ export default function AllPostsPage() {
     }, []);
 
     async function handleDelete(actionId) {
-        const res = await fetch(`/api/vahu/${actionId}`, {
+        const res = await fetch(`/api/auto/${actionId}`, {
             method: 'DELETE',
         });
         if (res.ok) {
@@ -36,8 +36,8 @@ export default function AllPostsPage() {
 
     return (
         <div className="container">
-            <h1> <ClipboardList size={27} /> VAHU</h1>
-            <div className="text-right mb-10"><a href={`/vahu/create`}><button className="btn btn-success">Create</button></a></div>
+            <h1> <ClipboardList size={27} /> AUTOMATIC</h1>
+            <div className="text-right mb-10"><a href={`/auto/create`}><button className="btn btn-success">New</button></a></div>
             <table className="styled-table">
                 <thead>
                     <tr>
@@ -52,7 +52,7 @@ export default function AllPostsPage() {
                             <td className="text-center">{index + 1}</td>
                             <td>{post.name}</td>
                             <td className="text-center">
-                                <a className="btn btn-sm btn-primary" href={`/vahu/${post._id}`} style={{ marginRight: 8 }}>
+                                <a className="btn btn-sm btn-primary" href={`/auto/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>
                                 </a>
@@ -88,7 +88,7 @@ export default function AllPostsPage() {
 
     const fetchPosts = async () => {
         try {
-            const res = await fetch('/api/bot/vahu');
+            const res = await fetch('/api/bot/auto');
             const result = await res.json();
             if (result.success) {
                 setPosts(result.data || []);
@@ -103,7 +103,7 @@ export default function AllPostsPage() {
     }, []);
 
     async function handleDelete(actionId) {
-        const res = await fetch(`/api/vahu/${actionId}`, {
+        const res = await fetch(`/api/auto/${actionId}`, {
             method: 'DELETE',
         });
         if (res.ok) {
@@ -115,8 +115,8 @@ export default function AllPostsPage() {
 
     return (
         <div className="container">
-            <h1> <ClipboardList size={27} /> VAHU</h1>
-            <div className="text-right mb-10"><a href={`/vahu/create`}><button className="btn btn-success">Create</button></a></div>
+            <h1> <ClipboardList size={27} /> AUTOMATIC</h1>
+            <div className="text-right mb-10"><a href={`/auto/create`}><button className="btn btn-success">New</button></a></div>
             <table className="styled-table">
                 <thead>
                     <tr>
@@ -131,7 +131,7 @@ export default function AllPostsPage() {
                             <td className="text-center">{index + 1}</td>
                             <td>{post.name}</td>
                             <td className="text-center">
-                                <a className="btn btn-sm btn-primary" href={`/vahu/${post._id}`} style={{ marginRight: 8 }}>
+                                <a className="btn btn-sm btn-primary" href={`/auto/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>
                                 </a>
