@@ -27,18 +27,6 @@ export default function TimelinePage() {
             ]
         }
     ];
-//   const { data: session, status } = useSession();
-//   const router = useRouter();
-//     console.log({status})
-//   useEffect(() => {
-//     if (status === "unauthenticated") {
-//       router.push("/login"); // tự động chuyển hướng nếu chưa đăng nhập
-//     }
-//   }, [status, router]);
-
-//   if (status === "loading") {
-//     return <p>Đang kiểm tra đăng nhập...</p>;
-//   }
 
     return (
         <main>

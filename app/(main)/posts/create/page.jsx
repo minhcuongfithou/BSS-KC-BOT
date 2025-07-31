@@ -47,7 +47,7 @@ export default function EditPostPage() {
     };
 
     if (loading && status === "loading") return <></>;
-    console.log(session.user?.email)
+    
     return <div className='container'>
         <h1> <span
             onClick={() => router.back()}

@@ -1,7 +1,6 @@
 import '@/app/styles/global.css';
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { SessionProvider } from 'next-auth/react';
 import NavLink from '@/app/components/NavLink';
 import UserDropdown from '@/app/components/UserDropdown'
 import UserProvider from '../context/UserProvider';
@@ -17,7 +16,8 @@ export default async function RootLayout({ children, title }) {
         <html lang="vi">
             <head>
                 <title>KC</title>
-                <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"></link>
+                <link href="https://fonts.googleapis.com/css2?family=ABeeZee&display=swap" rel="stylesheet" />
+                <link href="https://fonts.googleapis.com/css2?family=Kalam&display=swap" rel="stylesheet" />
             </head>
             <body>
                 <div className="layout">

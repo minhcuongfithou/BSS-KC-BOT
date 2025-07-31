@@ -37,7 +37,7 @@ export default function AllPostsPage() {
     return (
         <div className="container">
             <h1> <Settings size={27} /> AUTOMATIC</h1>
-            <div className="text-right mb-10"><a href={`/auto/create`}><button className="btn btn-success">New</button></a></div>
+            <div className="text-right mb-10"><a href={`/auto/create`}><button className="btn btn-sm btn-success">New</button></a></div>
             <table className="styled-table">
                 <thead>
                     <tr>

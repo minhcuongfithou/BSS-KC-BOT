@@ -6,13 +6,11 @@ if (!cached) {
 }
 
 async function connectDB() {
-    console.log(12313)
-    // if (cached.conn) {
-    //     return cached.conn;
-    // }
+    if (cached.conn) {
+        return cached.conn;
+    }
 
-    // if (!cached.promise) {
-    if (true) {
+    if (!cached.promise) {
         const opts = {
             bufferCommands: false,
         };
@@ -20,11 +18,7 @@ async function connectDB() {
         cached.promise = mongoose.connect(process.env.MONGODB_URI, opts).then((mongoose) => {
             return mongoose;
         });
-
-        console.log(456)
     }
-
-    console.log(process.env.MONGODB_URI)
 
     try {
         cached.conn = await cached.promise;

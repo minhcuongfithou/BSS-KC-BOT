@@ -73,33 +73,9 @@ export default function CustomConfirmPasswordPage() {
     const [loadingDomain, setLoadingDomain] = useState(false);
     // Check domain khong bi thay doi thi moi call api
     const prevDomain = useRef('');
-    // const initialFormRef = useRef(formDefault);
     useEffect(() => {
-        // Gán domain ban đầu khi component mount
         prevDomain.current = form.domain;
     }, []);
-    // const router = useRouter();
-
-    // useEffect(() => {
-    //     // fetch(`/api/vahu/${id}`)
-    //     //     .then(res => res.json())
-    //     //     .then(data => {
-    //     //         console.log({ data })
-    //     //         const cleanData = {
-    //     //             title: data.title || '',
-    //     //             callback: data.callback || '',
-    //     //             action: data.action || '',
-    //     //         };
-    //     //         setForm(cleanData);
-    //     //         initialFormRef.current = cleanData;
-    //     //     })
-    //     //     .catch(err => {
-    //     //         console.error('Fetch error:', err);
-    //     //     })
-    //     //     .finally(() => {
-    //     //         setLoading(false);
-    //     //     });
-    // }, []);
 
     const showToastMessage = useCallback((message) => {
         setToastMessage(message);
@@ -108,27 +84,26 @@ export default function CustomConfirmPasswordPage() {
         setShowToast(true);
     }, []);
 
+    // useEffect(() => {
+    //     const changed = ['domain', 'language'].some((field) => {
+    //         const current = form[field];
+    //         const initial = initialFormRef.current[field];
+
+    //         if (Array.isArray(current) && Array.isArray(initial)) {
+    //             return (
+    //                 current.length !== initial.length ||
+    //                 current.some((v, i) => v !== initial[i])
+    //             );
+    //         }
+
+    //         return current !== initial;
+    //     });
+
+    //     setIsFormChanged(changed);
+    // }, [form initialFormRef]);
+
     useEffect(() => {
-        const changed = ['domain', 'language'].some((field) => {
-            const current = form[field];
-            const initial = initialFormRef.current[field];
-
-            if (Array.isArray(current) && Array.isArray(initial)) {
-                return (
-                    current.length !== initial.length ||
-                    current.some((v, i) => v !== initial[i])
-                );
-            }
-
-            return current !== initial;
-        });
-
-        setIsFormChanged(changed);
-    }, [form]);
-
-    useEffect(() => {
-        const fields = ['domain', 'language'];
-
+        const fields = ['domain', 'page', 'language'];
         const changed = fields.some((field) => {
             const current = form[field];
             const initial = initialFormRef.current[field];
@@ -141,22 +116,24 @@ export default function CustomConfirmPasswordPage() {
         });
 
         setIsFormChanged(changed);
-    }, [form]);
+    }, [form, initialFormRef.current]);
 
     const handleSubmit = async (e) => {
         setIsSubmit(true)
         e.preventDefault();
         console.log(JSON.stringify(form))
         try {
-            const res = await fetch(`/api/auto/${actionVahu}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-            if (!res.ok) {
-                showToastMessage('Có lỗi xảy ra, vui lòng kiểm tra lại hoặc liên hệ nhà phát triển');
-            }
-            showToastMessage('Updated successfully.');
+            // const res = await fetch(`/api/auto/${actionVahu}`, {
+            //     method: 'PUT',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(form),
+            // });
+            // if (!res.ok) {
+            //     showToastMessage('An error occurred. Please check again or contact the developer');
+            // } else {
+            //     showToastMessage('Updated successfully.');
+            //     initialFormRef.current = form;
+            // }
         } catch (err) {
             throw new Error("Server Error");
         } finally {

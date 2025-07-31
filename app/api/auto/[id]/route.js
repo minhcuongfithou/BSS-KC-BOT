@@ -29,7 +29,7 @@ export async function GET(req, { params }) {
         if (!action) return null;
 
         const actionId = action._id;
-
+        console.log({actionId, domain})
         // 2. Tìm handle theo actionId và domain
         const handle = await Handle.findOne({ actionId, domain }).lean();
         if (!handle) {

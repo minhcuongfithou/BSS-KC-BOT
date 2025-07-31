@@ -1,5 +1,5 @@
 :root {
-    --font-base: 'Be Vietnam Pro', 'ui-sans-serif', 'system-ui', 'sans-serif';
+    --font-base: 'Abeezee', 'ui-sans-serif', 'system-ui', 'sans-serif';
     --color-bg: #f4f6f8;
     --color-border: #dfe3e8;
     --color-primary: #5c6ac4;
@@ -177,6 +177,7 @@ textarea {
     user-select: none;
     display: inline-flex !important;
     justify-content: center;
+    align-items: center;
     text-align: center;
     text-decoration: none;
 }

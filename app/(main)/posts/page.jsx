@@ -14,7 +14,6 @@ export default function AllPostsPage() {
         try {
             const res = await fetch('/api/bot/post');
             const result = await res.json();
-            console.log({ result })
             if (result.success) {
                 setPosts(result.data || []);
             }
@@ -41,7 +40,7 @@ export default function AllPostsPage() {
     return (
         <div className="container">
             <h1><ClipboardList size={27} /> SOLUTION</h1>
-            <div className="text-right mb-10"><a href={`/posts/create`}><button className="btn btn-success">New</button></a></div>
+            <div className="text-right mb-10"><a href={`/posts/create`}><button className="btn btn-sm btn-success">New</button></a></div>
             <table className="styled-table">
                 <thead>
                     <tr>
