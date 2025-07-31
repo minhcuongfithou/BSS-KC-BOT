@@ -1,9 +1,10 @@
 import postService from '@/services/postService';
 import connectDB from '@/utils/mongodb';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
-    await connectDB();
     try {
+        await connectDB();
         const { searchParams } = new URL(req.url);
         let q = searchParams.get('q');
         let type = null;
@@ -13,12 +14,13 @@ export async function GET(req) {
         }
 
         let data;
-
+        console.log({ q })
         if (!q && !type) {
             data = await postService.getAllPosts();
         } else {
             data = await postService.handleFuzzySearch(q, type);
         }
+        console.log({ data })
         return new Response(JSON.stringify({
             success: true,
             data,

@@ -156,7 +156,7 @@ export default function CustomConfirmPasswordPage() {
             if (!res.ok) {
                 showToastMessage('Có lỗi xảy ra, vui lòng kiểm tra lại hoặc liên hệ nhà phát triển');
             }
-            showToastMessage('Cập nhật thông tin thành công');
+            showToastMessage('Updated successfully.');
         } catch (err) {
             throw new Error("Server Error");
         } finally {
@@ -189,16 +189,15 @@ export default function CustomConfirmPasswordPage() {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
-            await new Promise((resolve) => setTimeout(resolve, 2000));
             if (!res.ok) {
-                showToastMessage('Không có thông tin, nhưng bạn có thể tạo mới');
+                showToastMessage('Unavailable. Create new?');
                 setForm((prev) => ({
                     ...prev,
                     page: '',
                     language: ''
                 }));
             } else {
-                showToastMessage('Đã có thông tin trước đó, nhưng bạn có thể sửa đổi');
+                showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
                 setForm((prev) => ({
                     ...prev,

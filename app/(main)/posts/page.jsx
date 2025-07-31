@@ -14,6 +14,7 @@ export default function AllPostsPage() {
         try {
             const res = await fetch('/api/bot/post');
             const result = await res.json();
+            console.log({ result })
             if (result.success) {
                 setPosts(result.data || []);
             }

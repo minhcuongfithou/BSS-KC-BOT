@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import mongoose from "mongoose";
 import { redirect } from "next/navigation";
 
 export default async function LoginLayout({ children, title }) {

@@ -1003,12 +1003,14 @@ const isValidShopifyDomain = (domain) => {
     return typeof domain === 'string' && domain.endsWith('.myshopify.com') && !domain.startsWith('httpF');
 };
 
+
 export default function CreateVahuPage() {
     const pathname = usePathname();
     const actionVahu = pathname.split('/').pop();
     const [loading, setLoading] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
     const [form, setForm] = useState(formDefault);
+    console.log(form)
     const initialFormRef = useRef(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
     // const initialFormRef = useRef(formDefault);
@@ -1096,9 +1098,9 @@ export default function CreateVahuPage() {
                 body: JSON.stringify(form),
             });
             if (!res.ok) {
-                showToastMessage('Có lỗi xảy ra, vui lòng kiểm tra lại hoặc liên hệ nhà phát triển');
+                showToastMessage('Something went wrong. Contact dev if needed.');
             }
-            showToastMessage('Cập nhật thông tin thành công');
+            showToastMessage('Updated successfully.');
         } catch (err) {
             throw new Error("Server Error");
         } finally {
@@ -1107,7 +1109,6 @@ export default function CreateVahuPage() {
     };
 
     const handleDomainBlur = async (e) => {
-        showToastMessage('Không có thông tin, nhưng bạn có thể tạo mới');
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
@@ -1126,23 +1127,20 @@ export default function CreateVahuPage() {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
-            await new Promise((resolve) => setTimeout(resolve, 2000));
             if (!res.ok) {
-                showToastMessage('Không có thông tin, nhưng bạn có thể tạo mới');
+                showToastMessage('Unavailable. Create new?');
                 setForm((prev) => ({
                     ...prev,
-                    page: '',
-                    language: ''
+                    listCountrySelected: []
                 }));
             } else {
-                showToastMessage('Đã có thông tin trước đó, nhưng bạn có thể sửa đổi');
+                showToastMessage('Info exists. You can edit.');
                 const resReponse = await res.json();
-                // setForm((prev) => ({
-                //     ...prev,
-                //     page: resReponse.params[1],
-                //     language: detectLanguage(resReponse.params[0], dataLanguage)
-                // }));
-                console.log(resReponse)
+                resReponse.params[0] = resReponse.params[0].replace(/\\"/g, '"');
+                setForm((prev) => ({
+                    ...prev,
+                    listCountrySelected: JSON.parse(`[${resReponse.params[0]}]`)
+                }));
             }
         } catch (err) {
             console.log(err)
