@@ -1,59 +1,25 @@
 'use client'
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { useRouter, useParams, usePathname } from 'next/navigation';
+
 import '@/app/styles/radio.css';
 import '@/app/styles/badge.css';
+
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Toast from '@/app/components/Toast';
+import constants from '@/data/custom-confirm-password/constants.json';
 
-const dataLanguage = {
-    GB: {
-        labelPass: 'Confirm Password',
-        emptyPass: 'Please confirm your password',
-        incorrectPass: 'Passwords do not match'
-    },
-    DE: {
-        labelPass: 'Passwort bestätigen',
-        emptyPass: 'Bitte bestätigen Sie Ihr Passwort',
-        incorrectPass: 'Passwörter stimmen nicht überein'
-    },
-    IT: {
-        labelPass: 'Conferma password',
-        emptyPass: 'Per favore conferma la tua password',
-        incorrectPass: 'Le password non corrispondono'
-    }
-}
+const { dataLanguage, listCountry, formDefault } = constants;
 
-const listCountry = [
-    {
-        "label": "United Kingdom",
-        "value": "GB"
-    },
-    {
-        "label": "Germany",
-        "value": "DE"
-    },
-    {
-        "label": "Italy",
-        "value": "IT"
-    }
-]
-
-const formDefault = {
-    domain: '',
-    page: '',
-    language: '',
-}
-
-function detectLanguage(inputObj, langMap) {
-    for (const [langCode, langObj] of Object.entries(langMap)) {
-        const isMatch = Object.keys(inputObj).every(
-            key => inputObj[key] === langObj[key]
-        );
-        if (isMatch) return langCode;
-    }
-    return null;
-}
+// function detectLanguage(inputObj) {
+//     for (const [langCode, langObj] of Object.entries(dataLanguage)) {
+//         const isMatch = Object.keys(inputObj).every(
+//             key => inputObj[key] === langObj[key]
+//         );
+//         if (isMatch) return langCode;
+//     }
+//     return null;
+// }
 const isValidShopifyDomain = (domain) => {
     return typeof domain === 'string' && domain.endsWith('.myshopify.com') && !domain.startsWith('httpF');
 };
@@ -123,17 +89,17 @@ export default function CustomConfirmPasswordPage() {
         e.preventDefault();
         console.log(JSON.stringify(form))
         try {
-            // const res = await fetch(`/api/auto/${actionVahu}`, {
-            //     method: 'PUT',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(form),
-            // });
-            // if (!res.ok) {
-            //     showToastMessage('An error occurred. Please check again or contact the developer');
-            // } else {
-            //     showToastMessage('Updated successfully.');
-            //     initialFormRef.current = form;
-            // }
+            const res = await fetch(`/api/auto/${actionVahu}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (!res.ok) {
+                showToastMessage('An error occurred. Please check again or contact the developer');
+            } else {
+                showToastMessage('Updated successfully.');
+                initialFormRef.current = form;
+            }
         } catch (err) {
             throw new Error("Server Error");
         } finally {
@@ -148,13 +114,13 @@ export default function CustomConfirmPasswordPage() {
 
     if (!mounted) return null;
 
-    const handleDomainBlur = async (e) => {
+    const handleCheckData = async (e) => {
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
         console.log(prevDomain.current)
         console.log(currentDomain)
-        if(!isValidShopifyDomain(currentDomain)) {
+        if (!isValidShopifyDomain(currentDomain)) {
             showToastMessage('Domain không hợp lệ');
             return;
         }
@@ -176,12 +142,14 @@ export default function CustomConfirmPasswordPage() {
             } else {
                 showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
+                console.log(resReponse)
+                const { page, language } = JSON.parse(resReponse.params);
+                console.log({page, language})
                 setForm((prev) => ({
                     ...prev,
-                    page: resReponse.params[1],
-                    language: detectLanguage(resReponse.params[0], dataLanguage)
+                    page,
+                    language: language
                 }));
-                console.log(resReponse)
             }
         } catch (err) {
             console.log(err)
@@ -202,26 +170,31 @@ export default function CustomConfirmPasswordPage() {
                     1. Hãy điền thông tin domain khách hàng
                 </p>
 
-                <div className="input-with-spinner">
-                    <input
-                        className="mb-10"
-                        type="text"
-                        placeholder="ex: dev-cuong-nm-store.myshopify.com"
-                        value={form.domain}
-                        onChange={(e) =>
-                            setForm((prev) => ({ ...prev, domain: e.target.value }))
-                        }
-                        onBlur={handleDomainBlur}
-                    />
-                    {loadingDomain && (
-                        <div className="spinner-inline">
-                            <span className="dot"></span>
-                            <span className="dot"></span>
-                            <span className="dot"></span>
-                        </div>
-                    )}
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div className="input-with-spinner">
+                        <input
+                            className="mb-10"
+                            type="text"
+                            placeholder="ex: dev-cuong-nm-store.myshopify.com"
+                            value={form.domain}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, domain: e.target.value }))
+                            }
+                        />
+                        {loadingDomain && (
+                            <div className="spinner-inline">
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                            </div>
+                        )}
+                    </div>
+
+                    <button type="button" className="btn btn-sm btn-success mb-10" onClick={handleCheckData}>Check data</button>
                 </div>
-                <div className={(loadingDomain || form.domain.trim().length === 0 || prevDomain.current.trim().length === 0 || !isValidShopifyDomain(form.domain)) ? 'disabled' : ''}>
+
+                <div className={!isValidShopifyDomain(form.domain) ? 'disabled' : ''}>
                     <p className="label">
                         2. URL form RF
                     </p>
@@ -242,7 +215,6 @@ export default function CustomConfirmPasswordPage() {
 
                     <div className="radio-grid">
                         {listCountry.map((country, index) => {
-                            const checked = form.language.includes(country.value);
                             return (
                                 <label key={country.value} className="custom-radio">
                                     <input

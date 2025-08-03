@@ -1,0 +1,38 @@
+{
+    "dataLanguage": {
+        "GB": {
+            "labelPass": "Confirm Password",
+            "emptyPass": "Please confirm your password",
+            "incorrectPass": "Passwords do not match"
+        },
+        "DE": {
+            "labelPass": "Passwort bestätigen",
+            "emptyPass": "Bitte bestätigen Sie Ihr Passwort",
+            "incorrectPass": "Passwörter stimmen nicht überein"
+        },
+        "IT": {
+            "labelPass": "Conferma password",
+            "emptyPass": "Per favore conferma la tua password",
+            "incorrectPass": "Le password non corrispondono"
+        }
+    },
+    "listCountry": [
+        {
+            "label": "United Kingdom",
+            "value": "GB"
+        },
+        {
+            "label": "Germany",
+            "value": "DE"
+        },
+        {
+            "label": "Italy",
+            "value": "IT"
+        }
+    ],
+    "formDefault": {
+        "domain": "",
+        "page": "",
+        "language": ""
+    }
+}

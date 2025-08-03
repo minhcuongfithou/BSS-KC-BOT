@@ -1,11 +1,14 @@
 'use client'
+
 import '@/app/styles/introduction.css';
 
-export default function MainPage() {
+import { useUser } from '@/app/context/UserContext';
 
+export default function MainPage() {
+    const session = useUser();
     return (
         <div className="container">
-            <h1><span className="wave-hand">👋</span> Welcome, Admin</h1>
+            <h1><span className="wave-hand">👋</span> Welcome, {session?.user?.name?.split(' ')?.[0]} </h1>
             <div className="intro-box">
                 <h1>Introduction to the Technical Support System</h1>
                 <div className="intro-desc">

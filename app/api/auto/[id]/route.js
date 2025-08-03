@@ -29,7 +29,7 @@ export async function GET(req, { params }) {
         if (!action) return null;
 
         const actionId = action._id;
-        console.log({actionId, domain})
+        console.log({ actionId, domain })
         // 2. Tìm handle theo actionId và domain
         const handle = await Handle.findOne({ actionId, domain }).lean();
         if (!handle) {
@@ -87,7 +87,12 @@ export async function PUT(req, { params }) {
                 return NextResponse.json(updatedAction);
             }
             case 'custom-confirm-password': {
-                data.name = titleAction;
+                // data.name = titleAction;
+                data.params = JSON.stringify({
+                    language: data.language,
+                    page: data.page
+                });
+                console.log({ data })
                 const updatedAction = await Handle.findOneAndUpdate(
                     { actionId: new mongoose.Types.ObjectId('6860d5da755cfef4b9d6ce49'), domain: data.domain },
                     { $set: { ...data } },
@@ -97,31 +102,17 @@ export async function PUT(req, { params }) {
                     }
                 );
 
-                console.log({ updatedAction })
+                // console.log({ updatedAction })
 
                 if (!updatedAction) {
                     return NextResponse.json({ message: 'Action not found' }, { status: 404 });
                 }
+                const params = JSON.stringify({
+                    language: data.language,
+                    page: data.page
+                })
 
-                // update trong vahu
-                const dataLanguage = {
-                    GB: {
-                        labelPass: 'Confirm Password',
-                        emptyPass: 'Please confirm your password',
-                        incorrectPass: 'Passwords do not match'
-                    },
-                    DE: {
-                        labelPass: 'Passwort bestätigen',
-                        emptyPass: 'Bitte bestätigen Sie Ihr Passwort',
-                        incorrectPass: 'Passwörter stimmen nicht überein'
-                    },
-                    IT: {
-                        labelPass: 'Conferma password',
-                        emptyPass: 'Per favore conferma la tua password',
-                        incorrectPass: 'Le password non corrispondono'
-                    }
-                }
-                const result = await vahuService.saveContent(data.author, data.domain, "add", titleAction, [dataLanguage[data.language], data.page]);
+                const result = await vahuService.saveContent(data.author, data.domain, "add", titleAction, params);
                 return NextResponse.json(updatedAction);
             }
         }

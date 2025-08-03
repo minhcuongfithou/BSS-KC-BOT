@@ -15,7 +15,7 @@ const handleSchema = new mongoose.Schema({
         required: true,
     },
     params: {
-        type: mongoose.Schema.Types.Array,
+        type: mongoose.Schema.Types.String,
         required: true,
     },
     deletedAt: {
