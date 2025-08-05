@@ -10,13 +10,13 @@ import path from 'path';
 dotenv.config();
 
 // ham rac
-async function writeFileTest(content){
+async function writeFileTest(content) {
     const filePath = path.join(process.cwd(), 'public', 'output.txt');
 
-  try {
-    await writeFile(filePath, content, 'utf8');
-  } catch (err) {
-  }
+    try {
+        await writeFile(filePath, content, 'utf8');
+    } catch (err) {
+    }
 }
 // Backend
 const createAction = async (body) => {
@@ -38,6 +38,8 @@ const getAllActions = async () => {
 }
 
 // BOT
+
+// Lấy token được lưu trong database
 const getAccessToken = async (serviceName = 'vahu') => {
     try {
         const tokenDoc = await Token.findOne({ service: serviceName }).sort({ updatedAt: -1 });
@@ -50,7 +52,7 @@ const getAccessToken = async (serviceName = 'vahu') => {
         return null;
     }
 };
-
+// Thực hiện hành động đăng nhập và lấy về accessToken mới
 const login = async () => {
     try {
         const loginURL = process.env.URL_LOGIN_VAHU;
@@ -83,6 +85,7 @@ const login = async () => {
     }
 };
 
+// Nếu token hết hạn, tiến hành việc lấy accessToken mới bằng login, sau đó lưu vào database
 const refreshToken = async () => {
     const newToken = await login();
     await Token.findOneAndUpdate(
@@ -93,7 +96,8 @@ const refreshToken = async () => {
     return newToken;
 }
 
-const getData = async (token, domain) => {
+// Lấy new cookie vahu
+const getCookie = async (token, domain) => {
     const URL_SOLUTION_VAHU = process.env.URL_SOLUTION_VAHU;
     try {
         const response = await axios.get(
@@ -117,16 +121,17 @@ const getData = async (token, domain) => {
     }
 }
 
+// Lấy all content vahu
 const getContent = async (domain) => {
     let token = await getAccessToken();
     try {
-        const data = await getData(token, domain);
+        const data = await getCookie(token, domain);
         return data;
     } catch (err) {
         if (err.message === 'EXPIRED_TOKEN') {
             try {
                 const newToken = await refreshToken();
-                const content = await getData(newToken, domain);
+                const content = await getCookie(newToken, domain);
                 return content;
             } catch (retryErr) {
                 return { success: false, error: retryErr };
@@ -135,8 +140,8 @@ const getContent = async (domain) => {
     }
 }
 
-const saveContent = async (author, domain, type, action, params) => {
-    console.log({author, domain, type, action, params})
+const checkAndSaveContent = async (author, domain, type, action, params) => {
+    // console.log({author, domain, type, action, params})
     const findAction = await Action.findOne({ name: action }).lean();
     let handles = await Handle.find({ domain, actonId: findAction.id });
 
@@ -146,31 +151,31 @@ const saveContent = async (author, domain, type, action, params) => {
 
     try {
         await session.withTransaction(async () => {
-            const update = await Handle.findOneAndUpdate({ domain, actionId: findAction._id }, { $set: { params, author, deletedAt } }, { new: true, session, upsert: true }).lean();
+            // params phải là một chuỗi
+            // const update = await Handle.findOneAndUpdate({ domain, actionId: findAction._id }, { $set: { params, author, deletedAt } }, { new: true, session, upsert: true }).lean();
 
-            // update lai bien vua update
-            handles.map((handle, ind) => {
-                if (handle.actionId.equals(findAction._id)) {
-                    handles[ind] = update;
-                }
-            })
+            // // update lai bien vua update
+            // handles.map((handle, ind) => {
+            //     if (handle.actionId.equals(findAction._id)) {
+            //         handles[ind] = update;
+            //     }
+            // })
             const newContentVahu = await _buildContentVahu(author, domain, handles);
             await writeFileTest(newContentVahu)
 
-            // const ok = await _checkValidContentVahu(domain, newContentVahu);
-            const ok = true;
+            const ok = await saveContent(domain, newContentVahu);
+            // const ok = true;
             if (!ok) throw new Error('reject content');
         });
 
-        console.log('✅ Commit thành công');
+        console.log('Commit success');
+        return { success: true }
     } catch (e) {
-        console.log('❌ Rollback:', e, e.message);
+        console.log('Rollback:', e, e.message);
         return { success: false }
     } finally {
         await session.endSession();
     }
-
-    return { success: true }
 };
 
 const _buildContentVahu = async (author, domain, handles) => {
@@ -186,8 +191,8 @@ const _buildContentVahu = async (author, domain, handles) => {
     const allFilter = new Set();
     await Promise.all(handles.map(async (handle) => {
         const { createdAt, updatedAt, deletedAt } = handle;
+        const params = handle.params.split("|");
         let codeFuncInClass = ``;
-        const { params } = handle;
         const action = await Action.findOne({ _id: handle.actionId }).lean();
         if (!action) return;
         // console.log({ action })
@@ -291,7 +296,6 @@ class ${className} extends BaseAction {
 
     // console.log({ listActionFilter })
 
-
     const codeGenerate = `\n// start ${hash}
 class BaseAction {
     constructor() {
@@ -349,7 +353,8 @@ ${listActionFilter.trim()}
     return newContentVahu;
 }
 
-const _checkValidContentVahu = async (domain, newContentVahu) => {
+const saveContent = async (domain, newContentVahu) => {
+    // Hàm xử lý tương đương với ấn nút save trên giao diện vahu
     const send = async (token, content) => {
         const URL_SOLUTION_VAHU = process.env.URL_SOLUTION_VAHU;
         return axios.post(`${URL_SOLUTION_VAHU}${domain}`, {
@@ -366,17 +371,12 @@ const _checkValidContentVahu = async (domain, newContentVahu) => {
 
     try {
         const token = await getAccessToken();
-        // console.log(`123`)
         const res = await send(token, newContentVahu);
-        // console.log(`OK: ${res.data.status}`)
         if (res.data.status === 'success') {
             return { success: true };
         }
-
         return { success: false };
-
     } catch (err) {
-        // console.log({ err })
         if (err.message === 'EXPIRED_TOKEN') {
             try {
                 const newToken = await refreshToken();
@@ -436,7 +436,7 @@ const _formatTimestamp = (ms) => {
 const vahuService = {
     login,
     getContent,
-    saveContent,
+    checkAndSaveContent,
     getAllActions,
     createAction
 };

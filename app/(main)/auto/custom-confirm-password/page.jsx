@@ -8,21 +8,20 @@ import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import Toast from '@/app/components/Toast';
 import constants from '@/data/custom-confirm-password/constants.json';
+import { isValidShopifyDomain } from '@/common';
 
 const { dataLanguage, listCountry, formDefault } = constants;
 
-// function detectLanguage(inputObj) {
-//     for (const [langCode, langObj] of Object.entries(dataLanguage)) {
-//         const isMatch = Object.keys(inputObj).every(
-//             key => inputObj[key] === langObj[key]
-//         );
-//         if (isMatch) return langCode;
-//     }
-//     return null;
-// }
-const isValidShopifyDomain = (domain) => {
-    return typeof domain === 'string' && domain.endsWith('.myshopify.com') && !domain.startsWith('httpF');
-};
+// Hàm này có nhiệm vụ tìm ra phần dịch đang thuộc quốc gia nào
+function detectLanguage(inputObj) {
+    for (const [langCode, langObj] of Object.entries(dataLanguage)) {
+        const isMatch = Object.keys(inputObj).every(
+            key => inputObj[key] === langObj[key]
+        );
+        if (isMatch) return langCode;
+    }
+    return null;
+}
 
 export default function CustomConfirmPasswordPage() {
     const pathname = usePathname();
@@ -87,7 +86,9 @@ export default function CustomConfirmPasswordPage() {
     const handleSubmit = async (e) => {
         setIsSubmit(true)
         e.preventDefault();
-        console.log(JSON.stringify(form))
+        form.translate = JSON.stringify(dataLanguage[form.language]);
+        // form.page = JSON.stringify(form.page);
+        console.log(actionVahu)
         try {
             const res = await fetch(`/api/auto/${actionVahu}`, {
                 method: 'PUT',
@@ -118,8 +119,8 @@ export default function CustomConfirmPasswordPage() {
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
-        console.log(prevDomain.current)
-        console.log(currentDomain)
+        // console.log(prevDomain.current)
+        // console.log(currentDomain)
         if (!isValidShopifyDomain(currentDomain)) {
             showToastMessage('Domain không hợp lệ');
             return;
@@ -132,6 +133,7 @@ export default function CustomConfirmPasswordPage() {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
+            console.log(res)
             if (!res.ok) {
                 showToastMessage('Unavailable. Create new?');
                 setForm((prev) => ({
@@ -143,12 +145,11 @@ export default function CustomConfirmPasswordPage() {
                 showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
                 console.log(resReponse)
-                const { page, language } = JSON.parse(resReponse.params);
-                console.log({page, language})
+                const [ translate, page ] = resReponse.params.split("|");
                 setForm((prev) => ({
                     ...prev,
                     page,
-                    language: language
+                    language: detectLanguage(JSON.parse(translate))
                 }));
             }
         } catch (err) {
@@ -191,7 +192,7 @@ export default function CustomConfirmPasswordPage() {
                         )}
                     </div>
 
-                    <button type="button" className="btn btn-sm btn-success mb-10" onClick={handleCheckData}>Check data</button>
+                    <button type="button" className="btn btn-sm btn-success mb-10 btn-checkdata" onClick={handleCheckData}>Check data</button>
                 </div>
 
                 <div className={!isValidShopifyDomain(form.domain) ? 'disabled' : ''}>
@@ -202,7 +203,7 @@ export default function CustomConfirmPasswordPage() {
                     <input
                         className="mb-10"
                         type="text"
-                        placeholder="ex: /pages/create-account-wholesale"
+                        placeholder='ex: "/pages/create-account-wholesale", "/pages/bss-form-test", ...'
                         value={form.page}
                         onChange={(e) =>
                             setForm((prev) => ({ ...prev, page: e.target.value }))

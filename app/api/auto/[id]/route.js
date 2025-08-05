@@ -1,9 +1,9 @@
 import connectDB from '@/utils/mongodb';
 import Action from '@/models/Action';
 import Handle from '@/models/Handle';
-import { NextResponse } from 'next/server';
 import mongoose from 'mongoose';
 import vahuService from '@/services/vahuService';
+import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
     await connectDB();
@@ -29,7 +29,7 @@ export async function GET(req, { params }) {
         if (!action) return null;
 
         const actionId = action._id;
-        console.log({ actionId, domain })
+
         // 2. Tìm handle theo actionId và domain
         const handle = await Handle.findOne({ actionId, domain }).lean();
         if (!handle) {
@@ -43,15 +43,12 @@ export async function GET(req, { params }) {
 
 export async function PUT(req, { params }) {
     await connectDB();
-
     const titleAction = (await params).id;
-
     // if (!mongoose.Types.ObjectId.isValid(id)) {
     //     return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
     // }
     try {
         const data = await req.json();
-
         // OPTIONAL: Validate
         // if (!data.name || !data.type) {
         //   return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
@@ -83,16 +80,15 @@ export async function PUT(req, { params }) {
                 }
 
                 // update trong vahu
-                const result = await vahuService.saveContent(data.author, data.domain, "add", titleAction, [`${data.listCountrySelected.map(code => `"${code}"`).join(',')}`]);
+                const result = await vahuService.checkAndSaveContent(data.author, data.domain, "add", titleAction, [`${data.listCountrySelected.map(code => `"${code}"`).join(',')}`]);
                 return NextResponse.json(updatedAction);
             }
             case 'custom-confirm-password': {
                 // data.name = titleAction;
-                data.params = JSON.stringify({
-                    language: data.language,
-                    page: data.page
-                });
-                console.log({ data })
+                data.params = `${data.translate}|${data.page}`;
+                delete data.page;
+                delete data.translate;
+                console.log(data)
                 const updatedAction = await Handle.findOneAndUpdate(
                     { actionId: new mongoose.Types.ObjectId('6860d5da755cfef4b9d6ce49'), domain: data.domain },
                     { $set: { ...data } },
@@ -101,9 +97,7 @@ export async function PUT(req, { params }) {
                         runValidators: true,
                     }
                 );
-
                 // console.log({ updatedAction })
-
                 if (!updatedAction) {
                     return NextResponse.json({ message: 'Action not found' }, { status: 404 });
                 }
@@ -112,7 +106,7 @@ export async function PUT(req, { params }) {
                     page: data.page
                 })
 
-                const result = await vahuService.saveContent(data.author, data.domain, "add", titleAction, params);
+                const result = await vahuService.checkAndSaveContent(data.author, data.domain, "add", titleAction, params);
                 return NextResponse.json(updatedAction);
             }
         }
@@ -126,7 +120,6 @@ export async function PUT(req, { params }) {
         );
     }
 }
-
 
 export async function DELETE(req, { params }) {
     await connectDB();

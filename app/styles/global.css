@@ -365,6 +365,7 @@ pre {
 }
 
 .back-text {
+    margin-top: 10px;
     color: #3F51B5;
     cursor: pointer;
 }
@@ -483,4 +484,9 @@ strong {
     opacity: 0.4;
     pointer-events: none;
     cursor: not-allowed;
+}
+
+.btn-checkdata {
+    min-width: 120px;
+    min-height: 42px;
 }

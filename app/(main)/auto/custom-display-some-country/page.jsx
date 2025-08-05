@@ -1,13 +1,13 @@
 'use client'
 
-import '@/app/styles/checkbox.css';
-
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+
 import { useUser } from '@/app/context/UserContext';
-import Toast from '@/app/components/Toast';
 import constants from '@/data/custom-display-some-country/constants.json';
+import Toast from '@/app/components/Toast';
+import '@/app/styles/checkbox.css';
 
 const { listCountry } = constants;
 
@@ -17,20 +17,15 @@ const formDefault = {
     listCountrySelected: [],
 }
 
-const isValidShopifyDomain = (domain) => {
-    return typeof domain === 'string' && domain.endsWith('.myshopify.com') && !domain.startsWith('http');
-};
-
 export default function CreateVahuPage() {
     const pathname = usePathname();
     const actionVahu = pathname.split('/').pop();
     const [loading, setLoading] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
     const [form, setForm] = useState(formDefault);
-    console.log(form)
+
     const initialFormRef = useRef(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
-    // const initialFormRef = useRef(formDefault);
 
     const session = useUser();
     const router = useRouter();
@@ -129,11 +124,11 @@ export default function CreateVahuPage() {
     };
 
     const handleDomainBlur = async (e) => {
+
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
-        console.log(prevDomain.current)
-        console.log(currentDomain)
+
         if (!isValidShopifyDomain(currentDomain)) {
             console.log(111)
             showToastMessage('Domain không hợp lệ');
