@@ -27,6 +27,7 @@ export default function CustomConfirmPasswordPage() {
     const pathname = usePathname();
     const actionVahu = pathname.split('/').pop();
 
+    const [isValidDomain, setIsValidDomain] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
     const [form, setForm] = useState(formDefault);
     const initialFormRef = useRef(formDefault);
@@ -36,6 +37,29 @@ export default function CustomConfirmPasswordPage() {
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [loadingDomain, setLoadingDomain] = useState(false);
+
+    // Phục vụ cho việc add nhiều page
+    const [urls, setUrls] = useState(['']);
+
+    const handleUrlChange = (index, value) => {
+        const newUrls = [...urls];
+        newUrls[index] = value;
+        setUrls(newUrls);
+        console.log(newUrls)
+    };
+
+    const addUrlInput = () => {
+        setUrls([...urls, '']);
+    };
+
+    const removeUrlInput = (index) => {
+        if (urls.length > 1) {
+            const newUrls = urls.filter((_, i) => i !== index);
+            setUrls(newUrls);
+        }
+    };
+    // end
+
     // Check domain khong bi thay doi thi moi call api
     const prevDomain = useRef('');
     useEffect(() => {
@@ -88,8 +112,10 @@ export default function CustomConfirmPasswordPage() {
         e.preventDefault();
         form.translate = JSON.stringify(dataLanguage[form.language]);
         // form.page = JSON.stringify(form.page);
-        console.log(actionVahu)
+        console.log(urls)
+        form.page = urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1)
         try {
+
             const res = await fetch(`/api/auto/${actionVahu}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -122,6 +148,7 @@ export default function CustomConfirmPasswordPage() {
         // console.log(prevDomain.current)
         // console.log(currentDomain)
         if (!isValidShopifyDomain(currentDomain)) {
+            setIsValidDomain(false);
             showToastMessage('Domain không hợp lệ');
             return;
         }
@@ -134,6 +161,7 @@ export default function CustomConfirmPasswordPage() {
                 headers: { 'Content-Type': 'application/json' },
             });
             console.log(res)
+            setIsValidDomain(true);
             if (!res.ok) {
                 showToastMessage('Unavailable. Create new?');
                 setForm((prev) => ({
@@ -145,12 +173,14 @@ export default function CustomConfirmPasswordPage() {
                 showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
                 console.log(resReponse)
-                const [ translate, page ] = resReponse.params.split("|");
+                const [translate, page] = resReponse.params.split("|");
+                console.log(page)
                 setForm((prev) => ({
                     ...prev,
                     page,
                     language: detectLanguage(JSON.parse(translate))
                 }));
+                setUrls(page.replaceAll('"', '').split(','));
             }
         } catch (err) {
             console.log(err)
@@ -195,8 +225,8 @@ export default function CustomConfirmPasswordPage() {
                     <button type="button" className="btn btn-sm btn-success mb-10 btn-checkdata" onClick={handleCheckData}>Check data</button>
                 </div>
 
-                <div className={!isValidShopifyDomain(form.domain) ? 'disabled' : ''}>
-                    <p className="label">
+                <div className={!isValidDomain ? 'disabled' : ''}>
+                    {/* <p className="label">
                         2. URL form RF
                     </p>
 
@@ -208,7 +238,42 @@ export default function CustomConfirmPasswordPage() {
                         onChange={(e) =>
                             setForm((prev) => ({ ...prev, page: e.target.value }))
                         }
-                    />
+                    /> */}
+
+                    <div className="w-full max-w-md mx-auto mt-4">
+                        <p className="label">
+                            2. URL(s) for RF
+                        </p>
+                        {urls.map((url, index) => (
+                            <div key={index} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input
+                                    type="text"
+                                    value={url}
+                                    onChange={(e) => handleUrlChange(index, e.target.value)}
+                                    className="mb-10"
+                                />
+                                {urls.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeUrlInput(index)}
+                                        className="btn btn-danger"
+                                    >
+                                        &minus;
+                                    </button>
+                                )}
+
+                                {index === urls.length - 1 && (
+                                    <div><button
+                                        type="button"
+                                        onClick={addUrlInput}
+                                        className="btn btn-success"
+                                    >
+                                        +
+                                    </button></div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
 
                     <p className="label">
                         3. Chọn ngôn ngữ cho label và các báo lỗi khi validate field confirm
@@ -244,7 +309,7 @@ export default function CustomConfirmPasswordPage() {
                     <button
                         className="btn btn-primary"
                         type="submit"
-                        disabled={!isFormChanged || isSubmit || loadingDomain || !isValidShopifyDomain(form.domain)}
+                        disabled={!isFormChanged || isSubmit || loadingDomain || !isValidDomain}
                     >
                         Custom
                     </button>

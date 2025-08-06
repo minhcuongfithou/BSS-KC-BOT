@@ -1,23 +1,9 @@
-(() => {
-    console.log(123)
-})()
-const a = ({ shopData, checkoutButton, Tax }) => {
-  // Write code here
+const customCountryList = (...data) => {
+  const defaultCountries = data[0];
+  const countryList = ['VN'];
+  return  defaultCountries.filter(country =>  countryList.includes(country.value));
 }
-window.BSS_B2B.addAction('a', a);
-const b = ({ checkoutButton }) => {
-  // Write code here
-  return checkoutButton
-}
-window.BSS_B2B.addFilter('b', b);
-(() => {
-    console.log(456)
-})()
-const c = ({ checkoutButton }) => {
-  // Write code here
-  return checkoutButton
-}
-window.BSS_B2B.addFilter('c', c);
+window.BSS_B2B.addFilter('custom:rf/country', customCountryList);
 // start code automatically generated
 class BaseAction {
     constructor() {
@@ -60,39 +46,13 @@ class CombinedAction extends BaseAction {
     }
 }
 
-// Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5
-/*
-┌─────────────────────────────────────────────────────────────────┐
-│ Custom chỉ show một vài quốc gia nhất định -- Registration Form │
-│ ** Implementer: undefined **                                    │
-│ ** Created at : 29/06/2025 22:31 **                             │
-│ ** Updated at : 31/07/2025 13:25 **                             │
-└─────────────────────────────────────────────────────────────────┘
-*/
-class customDisplaySomeCountry extends BaseAction {
-    constructor() {
-        super();
-        this.handle = {
-            coreJS: () => {
-            
-            },
-            customRfCountry: (...data) => {  
-              const defaultCountries = data[0];
-              const countryList = [];
-              return defaultCountries.filter(country => countryList.includes(country.value));
-            },
-        };
-    }
-    static { BaseAction.register(this); }
-}
-// end Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5;
 // Y3VzdG9tLWNvbmZpcm0tcGFzc3dvcmQ=
 /*
 ┌──────────────────────────────────────────────────┐
 │ Thêm field confirm password -- Registration Form │
 │ ** Implementer: undefined **                     │
 │ ** Created at : 29/06/2025 22:35 **              │
-│ ** Updated at : 03/08/2025 22:26 **              │
+│ ** Updated at : 06/08/2025 17:48 **              │
 └──────────────────────────────────────────────────┘
 */
 class customConfirmPassword extends BaseAction {
@@ -100,8 +60,8 @@ class customConfirmPassword extends BaseAction {
         super();
         this.handle = {
             coreJS: () => {
-            const language = {"labelPass":"Confirm Password","emptyPass":"Please confirm your password","incorrectPass":"Passwords do not match"}
-              const isRFPage = ['abcb'].includes(window.location.pathname)
+            const language = {"labelPass":"Passwort bestätigen","emptyPass":"Bitte bestätigen Sie Ihr Passwort","incorrectPass":"Passwörter stimmen nicht überein"}
+              const isRFPage = ["/pages/bss-form-test","123"].includes(window.location.pathname)
               if (!isRFPage) return;
               const intervalTime = 100;
               const maxTime = 8000;
@@ -204,6 +164,32 @@ class customConfirmPassword extends BaseAction {
     static { BaseAction.register(this); }
 }
 // end Y3VzdG9tLWNvbmZpcm0tcGFzc3dvcmQ=;
+// Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5
+/*
+┌─────────────────────────────────────────────────────────────────┐
+│ Custom chỉ show một vài quốc gia nhất định -- Registration Form │
+│ ** Implementer: undefined **                                    │
+│ ** Created at : 29/06/2025 22:31 **                             │
+│ ** Updated at : 31/07/2025 13:25 **                             │
+└─────────────────────────────────────────────────────────────────┘
+*/
+class customDisplaySomeCountry extends BaseAction {
+    constructor() {
+        super();
+        this.handle = {
+            coreJS: () => {
+            
+            },
+            customRfCountry: (...data) => {  
+              const defaultCountries = data[0];
+              const countryList = [];
+              return defaultCountries.filter(country => countryList.includes(country.value));
+            },
+        };
+    }
+    static { BaseAction.register(this); }
+}
+// end Y3VzdG9tLWRpc3BsYXktc29tZS1jb3VudHJ5;
 
 const subclasses = BaseAction.getSubclasses();
 const combine = new CombinedAction(subclasses);
