@@ -288,7 +288,7 @@ pre {
 .sidebar {
     width: 200px;
     height: 100vh;
-    background-color: #f8fafc;
+    background-color: #f9f9f9;
     display: flex;
     flex-direction: column;
     padding: 24px 16px;
@@ -365,7 +365,6 @@ pre {
 }
 
 .back-text {
-    margin-top: 10px;
     color: #3F51B5;
     cursor: pointer;
 }
@@ -484,6 +483,7 @@ strong {
     opacity: 0.4;
     pointer-events: none;
     cursor: not-allowed;
+    filter: blur(6px);
 }
 
 .btn-checkdata {

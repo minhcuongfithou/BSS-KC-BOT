@@ -44,24 +44,11 @@ export async function GET(req, { params }) {
 export async function PUT(req, { params }) {
     await connectDB();
     const titleAction = (await params).id;
-    // if (!mongoose.Types.ObjectId.isValid(id)) {
-    //     return NextResponse.json({ message: 'Invalid ID' }, { status: 400 });
-    // }
     try {
         const data = await req.json();
-        // OPTIONAL: Validate
-        // if (!data.name || !data.type) {
-        //   return NextResponse.json({ message: 'Missing required fields' }, { status: 400 });
-        // }
-
-        // const updatedAction = await Action.findByIdAndUpdate(id, data, {
-        //     new: true,
-        //     runValidators: true,
-        // });
         switch (titleAction) {
             case 'custom-display-some-country': {
-                data.params = [data.listCountrySelected.join(',')];
-                // delete data.listCountrySelected;
+                data.params = `${data.listCountrySelected.map(item => `"${item}"`).join(',')}|${data.page}`
                 data.name = titleAction;
                 console.log(data)
                 const updatedAction = await Handle.findOneAndUpdate(
@@ -70,18 +57,16 @@ export async function PUT(req, { params }) {
                     {
                         new: true,
                         runValidators: true,
+                        upsert: true
                     }
                 );
 
-                console.log({ updatedAction })
-
-                if (!updatedAction) {
-                    return NextResponse.json({ message: 'Action not found' }, { status: 404 });
-                }
-
                 // update trong vahu
-                const result = await vahuService.checkAndSaveContent(data.author, data.domain, "add", titleAction, [`${data.listCountrySelected.map(code => `"${code}"`).join(',')}`]);
-                return NextResponse.json(updatedAction);
+                const result = await vahuService.checkAndSaveContent(data.author, data.domain, "add", titleAction, params);
+                return NextResponse.json(
+                    { message: 'PUT /api/auto/custom-display-some-country', message: result },
+                    { status: 200 }
+                );
             }
             case 'custom-confirm-password': {
                 // data.name = titleAction;
@@ -95,27 +80,26 @@ export async function PUT(req, { params }) {
                     {
                         new: true,
                         runValidators: true,
+                        upsert: true
                     }
                 );
-                // console.log({ updatedAction })
-                if (!updatedAction) {
-                    return NextResponse.json({ message: 'Action not found' }, { status: 404 });
-                }
+
                 const params = JSON.stringify({
                     language: data.language,
                     page: data.page
                 })
 
                 const result = await vahuService.checkAndSaveContent(data.author, data.domain, "add", titleAction, params);
-                return NextResponse.json(updatedAction);
+                return NextResponse.json(
+                    { message: 'PUT /api/auto/custom-confirm-password', message: result },
+                    { status: 200 }
+                );
             }
         }
-        console.log(data)
 
     } catch (error) {
-        console.error('PUT /api/auto/[id]:', error);
         return NextResponse.json(
-            { message: 'Error while updating', error: error.message },
+            { message: 'PUT /api/auto/[id]:', error: error },
             { status: 500 }
         );
     }

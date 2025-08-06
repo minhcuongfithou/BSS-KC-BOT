@@ -56,10 +56,10 @@ export default function AllPostsPage() {
                                     <Eye size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Xem</span>
                                 </a>
-                                <a className="btn btn-sm btn-warning" href={`/auto/${post._id}`} style={{ marginRight: 8 }}>
+                                {/* <a className="btn btn-sm btn-warning" href={`/auto/${post._id}`} style={{ marginRight: 8 }}>
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>
-                                </a>
+                                </a> */}
                                 <button
                                     className="btn btn-sm btn-danger"
                                     onClick={() => {

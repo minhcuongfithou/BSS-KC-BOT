@@ -1,5 +1,7 @@
 'use client'
 
+import '@/app/styles/checkbox.css';
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -7,7 +9,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@/app/context/UserContext';
 import constants from '@/data/custom-display-some-country/constants.json';
 import Toast from '@/app/components/Toast';
-import '@/app/styles/checkbox.css';
+import { isValidShopifyDomain } from '@/common';
 
 const { listCountry } = constants;
 
@@ -19,6 +21,9 @@ const formDefault = {
 
 export default function CreateVahuPage() {
     const pathname = usePathname();
+    const session = useUser();
+    const router = useRouter();
+
     const actionVahu = pathname.split('/').pop();
     const [loading, setLoading] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
@@ -27,8 +32,7 @@ export default function CreateVahuPage() {
     const initialFormRef = useRef(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
 
-    const session = useUser();
-    const router = useRouter();
+    const [isValidDomain, setIsValidDomain] = useState(false);
     const [toastKey, setToastKey] = useState(0);
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
@@ -39,27 +43,35 @@ export default function CreateVahuPage() {
         prevDomain.current = form.domain;
     }, []);
 
-    // useEffect(() => {
-    //     // fetch(`/api/vahu/${id}`)
-    //     //     .then(res => res.json())
-    //     //     .then(data => {
-    //     //         console.log({ data })
-    //     //         const cleanData = {
-    //     //             title: data.title || '',
-    //     //             callback: data.callback || '',
-    //     //             action: data.action || '',
-    //     //         };
-    //     //         setForm(cleanData);
-    //     //         initialFormRef.current = cleanData;
-    //     //     })
-    //     //     .catch(err => {
-    //     //         console.error('Fetch error:', err);
-    //     //     })
-    //     //     .finally(() => {
-    //     //         setLoading(false);
-    //     //     });
-    // }, []);
-    
+    // Phục vụ cho việc add nhiều page
+    const [urls, setUrls] = useState(['']);
+
+    const handleUrlChange = (index, value) => {
+        const newUrls = [...urls];
+        newUrls[index] = value;
+        setUrls(newUrls);
+        setForm((prev) => ({
+            ...prev,
+            page: urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1),
+        }));
+    };
+
+    const addUrlInput = () => {
+        setUrls([...urls, '']);
+    };
+
+    const removeUrlInput = (index) => {
+        if (urls.length > 1) {
+            const newUrls = urls.filter((_, i) => i !== index);
+            setUrls(newUrls);
+            setForm((prev) => ({
+                ...prev,
+                page: urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1),
+            }));
+        }
+    };
+    // end phục vụ cho việc add nhiều page
+
     const showToastMessage = useCallback((message) => {
         setToastMessage(message);
         setShowToast(false);
@@ -67,23 +79,6 @@ export default function CreateVahuPage() {
         setShowToast(true);
     }, []);
 
-    // useEffect(() => {
-    //     const changed = ['domain', 'listCountrySelected'].some((field) => {
-    //         const current = form[field];
-    //         const initial = initialFormRef.current[field];
-
-    //         if (Array.isArray(current) && Array.isArray(initial)) {
-    //             return (
-    //                 current.length !== initial.length ||
-    //                 current.some((v, i) => v !== initial[i])
-    //             );
-    //         }
-
-    //         return current !== initial;
-    //     });
-
-    //     setIsFormChanged(changed);
-    // }, [form]);
 
     useEffect(() => {
         const fields = ['domain', 'listCountrySelected'];
@@ -107,6 +102,8 @@ export default function CreateVahuPage() {
         e.preventDefault();
         try {
             form.author = session?.user?.email;
+            form.page = urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1);
+            console.log(form)
             const res = await fetch(`/api/auto/${actionVahu}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -123,39 +120,42 @@ export default function CreateVahuPage() {
         }
     };
 
-    const handleDomainBlur = async (e) => {
-
+    const handleCheckData = async (e) => {
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
-
         if (!isValidShopifyDomain(currentDomain)) {
-            console.log(111)
+            setIsValidDomain(false);
             showToastMessage('Domain không hợp lệ');
             return;
         }
         if (currentDomain === oldDomain || currentDomain.trim().length === 0) return;
         setLoadingDomain(true);
+        setUrls(['']);
         try {
             const query = new URLSearchParams(form).toString();
             const res = await fetch(`/api/auto/${actionVahu}?${query}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
             });
+            setIsValidDomain(true);
             if (!res.ok) {
                 showToastMessage('Unavailable. Create new?');
                 setForm((prev) => ({
                     ...prev,
-                    listCountrySelected: []
+                    page: '',
+                    listCountrySelected: ['']
                 }));
             } else {
-                showToastMessage('Info exists. You can edit.');
+                showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
-                resReponse.params[0] = resReponse.params[0].replace(/\\"/g, '"');
+                const [listCountrySelected, page] = resReponse.params.split("|");
                 setForm((prev) => ({
                     ...prev,
-                    listCountrySelected: JSON.parse(`[${resReponse.params[0]}]`)
+                    page,
+                    listCountrySelected: listCountrySelected.replaceAll('"', '').split(",")
                 }));
+                setUrls(page.replaceAll('"', '').split(','));
             }
         } catch (err) {
             console.log(err)
@@ -165,88 +165,131 @@ export default function CreateVahuPage() {
         }
     };
 
-    if (loading) return <></>;
 
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (loading) return <></>;
+    if (!mounted) return null;
+    console.log(form)
     return (
         <><div className="container">
             <form onSubmit={handleSubmit}>
                 <h1 className="title-vahu">
                     <span onClick={() => router.back()} className="back-text"> <ArrowLeft size={27} /> </span>
-                    <span>Custom chỉ show một vài quốc gia ở Registration Form</span>
+                    <span>Custom display only specific countries in Registration Form</span>
                 </h1>
                 <p className="label">
-                    1. Hãy điền thông tin domain khách hàng
+                    1. Enter domain
                 </p>
 
-                <div className="input-with-spinner">
-                    <input
-                        className="mb-10"
-                        type="text"
-                        placeholder="ex: dev-cuong-nm-store.myshopify.com"
-                        value={form.domain}
-                        onChange={(e) =>
-                            setForm((prev) => ({ ...prev, domain: e.target.value }))
-                        }
-                        onBlur={handleDomainBlur}
-                    />
-                    {loadingDomain && (
-                        <div className="spinner-inline">
-                            <span className="dot"></span>
-                            <span className="dot"></span>
-                            <span className="dot"></span>
-                        </div>
-                    )}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div className="input-with-spinner">
+                        <input
+                            className="mb-10"
+                            type="text"
+                            placeholder="ex: dev-cuong-nm-store.myshopify.com"
+                            value={form.domain}
+                            onChange={(e) =>
+                                setForm((prev) => ({ ...prev, domain: e.target.value }))
+                            }
+                        />
+                        {loadingDomain && (
+                            <div className="spinner-inline">
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                                <span className="dot"></span>
+                            </div>
+                        )}
+                    </div>
+
+                    <button type="button" className="btn btn-sm btn-success mb-10 btn-checkdata" onClick={handleCheckData}>Check data</button>
                 </div>
-                <div className={(loadingDomain || form.domain.trim().length === 0 || prevDomain.current.trim().length === 0 || !isValidShopifyDomain(form.domain)) ? 'disabled' : ''}>
-                <p className="label">
-                    2. Chọn danh sách các quốc gia sẽ hiển thị
-                </p>
+                <div className={!isValidDomain ? 'disabled' : ''}>
+                    <div className="w-full max-w-md mx-auto mt-4">
+                        <p className="label">
+                            2. URL(s) for RF
+                        </p>
+                        {urls.map((url, index) => (
+                            <div key={index} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                <input
+                                    type="text"
+                                    value={url}
+                                    onChange={(e) => handleUrlChange(index, e.target.value)}
+                                    className="mb-10"
+                                />
+                                {urls.length > 1 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => removeUrlInput(index)}
+                                        className="btn btn-danger"
+                                    >
+                                        Remove
+                                    </button>
+                                )}
 
-                <table className="country-table">
-                    <tbody>
-                        {Object.entries(
-                            listCountry.reduce((groups, country) => {
-                                const firstLetter = country.label.charAt(0).toUpperCase();
-                                if (!groups[firstLetter]) groups[firstLetter] = [];
-                                groups[firstLetter].push(country);
-                                return groups;
-                            }, {})
-                        ).map(([letter, countries]) => (
-                            <tr key={letter}>
-                                <td className="letter-cell">{letter}</td>
-                                <td>
-                                    <div className="checkbox-grid">
-                                        {countries.map((country) => {
-                                            const checked = form.listCountrySelected.includes(country.value);
-                                            return (
-                                                <label key={country.value} className="custom-checkbox">
-                                                    <input
-                                                        type="checkbox"
-                                                        name="country"
-                                                        value={country.value}
-                                                        checked={checked}
-                                                        onChange={(e) => {
-                                                            const isChecked = e.target.checked;
-                                                            setForm((prevForm) => {
-                                                                const selected = prevForm.listCountrySelected;
-                                                                const updated = isChecked
-                                                                    ? [...selected, country.value]
-                                                                    : selected.filter((val) => val !== country.value);
-                                                                return { ...prevForm, listCountrySelected: updated };
-                                                            });
-                                                        }}
-                                                    />
-                                                    <span className="checkmark"></span>
-                                                    {country.label}
-                                                </label>
-                                            );
-                                        })}
-                                    </div>
-                                </td>
-                            </tr>
+                            </div>
                         ))}
-                    </tbody>
-                </table>
+                        <button
+                            type="button"
+                            onClick={addUrlInput}
+                            className="btn btn-success"
+                        >
+                            Add
+                        </button>
+                    </div>
+
+                    <p className="label">
+                        3. Select countries to display
+                    </p>
+
+                    <table className="country-table">
+                        <tbody>
+                            {Object.entries(
+                                listCountry.reduce((groups, country) => {
+                                    const firstLetter = country.label.charAt(0).toUpperCase();
+                                    if (!groups[firstLetter]) groups[firstLetter] = [];
+                                    groups[firstLetter].push(country);
+                                    return groups;
+                                }, {})
+                            ).map(([letter, countries]) => (
+                                <tr key={letter}>
+                                    <td className="letter-cell">{letter}</td>
+                                    <td>
+                                        <div className="checkbox-grid">
+                                            {countries.map((country) => {
+                                                const checked = form.listCountrySelected.includes(country.value);
+                                                return (
+                                                    <label key={country.value} className="custom-checkbox">
+                                                        <input
+                                                            type="checkbox"
+                                                            name="country"
+                                                            value={country.value}
+                                                            checked={checked}
+                                                            onChange={(e) => {
+                                                                const isChecked = e.target.checked;
+                                                                setForm((prevForm) => {
+                                                                    const selected = prevForm.listCountrySelected;
+                                                                    const updated = isChecked
+                                                                        ? [...selected, country.value]
+                                                                        : selected.filter((val) => val !== country.value);
+                                                                    return { ...prevForm, listCountrySelected: updated };
+                                                                });
+                                                            }}
+                                                        />
+                                                        <span className="checkmark"></span>
+                                                        {country.label}
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
                 <br />
                 <div className="text-center">
@@ -260,7 +303,7 @@ export default function CreateVahuPage() {
                 </div>
             </form >
         </div>
-        {showToast && <Toast key={toastKey} show={true} message={toastMessage} />}
+            {showToast && <Toast key={toastKey} show={true} message={toastMessage} />}
         </>
     );
 

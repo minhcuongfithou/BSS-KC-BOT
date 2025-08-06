@@ -270,7 +270,7 @@ class ${className} extends BaseAction {
         super();
         this.handle = {
             coreJS: () => {
-            ${_indentMultiline(coreJs, '              ')}
+                ${_indentMultiline(coreJs, '                ')}
             },
             ${_indentMultiline(codeFuncInClass.trim(), '            ')}
         };

@@ -16,13 +16,14 @@ export default async function RootLayout({ children, title }) {
         <html lang="vi">
             <head>
                 <title>KC</title>
+                <link rel="icon" type="image/x-icon" href="https://cs-us.uicdn.net/fileadmin/user_upload/Icons/on-light/icon-upgrade-downgrade.svg"></link>
                 <link href="https://fonts.googleapis.com/css2?family=ABeeZee&display=swap" rel="stylesheet" />
                 <link href="https://fonts.googleapis.com/css2?family=Kalam&display=swap" rel="stylesheet" />
             </head>
             <body>
                 <div className="layout">
                     <aside className="sidebar">
-                        <img className="logo" src="/images/logo.png"></img>
+                        <img className="logo" src="/images/logo.jpg"></img>
                         <nav>
                             <ul>
                                 <NavLink href="/">Introduction</NavLink>

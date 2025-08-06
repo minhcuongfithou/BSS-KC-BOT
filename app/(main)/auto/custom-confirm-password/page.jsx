@@ -22,8 +22,10 @@ function detectLanguage(inputObj) {
     }
     return null;
 }
+// end
 
 export default function CustomConfirmPasswordPage() {
+    const router = useRouter();
     const pathname = usePathname();
     const actionVahu = pathname.split('/').pop();
 
@@ -32,7 +34,6 @@ export default function CustomConfirmPasswordPage() {
     const [form, setForm] = useState(formDefault);
     const initialFormRef = useRef(formDefault);
     const [isFormChanged, setIsFormChanged] = useState(false);
-    const router = useRouter();
     const [toastKey, setToastKey] = useState(0);
     const [toastMessage, setToastMessage] = useState('');
     const [showToast, setShowToast] = useState(false);
@@ -45,7 +46,10 @@ export default function CustomConfirmPasswordPage() {
         const newUrls = [...urls];
         newUrls[index] = value;
         setUrls(newUrls);
-        console.log(newUrls)
+        setForm((prev) => ({
+            ...prev,
+            page: urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1),
+        }));
     };
 
     const addUrlInput = () => {
@@ -56,11 +60,15 @@ export default function CustomConfirmPasswordPage() {
         if (urls.length > 1) {
             const newUrls = urls.filter((_, i) => i !== index);
             setUrls(newUrls);
+            setForm((prev) => ({
+                ...prev,
+                page: urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1),
+            }));
         }
     };
-    // end
+    // end phục vụ cho việc add nhiều page
 
-    // Check domain khong bi thay doi thi moi call api
+    // Check domain thay đổi hay không, nếu có thì checkData mới call api
     const prevDomain = useRef('');
     useEffect(() => {
         prevDomain.current = form.domain;
@@ -72,24 +80,6 @@ export default function CustomConfirmPasswordPage() {
         setToastKey(prev => prev + 1);
         setShowToast(true);
     }, []);
-
-    // useEffect(() => {
-    //     const changed = ['domain', 'language'].some((field) => {
-    //         const current = form[field];
-    //         const initial = initialFormRef.current[field];
-
-    //         if (Array.isArray(current) && Array.isArray(initial)) {
-    //             return (
-    //                 current.length !== initial.length ||
-    //                 current.some((v, i) => v !== initial[i])
-    //             );
-    //         }
-
-    //         return current !== initial;
-    //     });
-
-    //     setIsFormChanged(changed);
-    // }, [form initialFormRef]);
 
     useEffect(() => {
         const fields = ['domain', 'page', 'language'];
@@ -107,46 +97,10 @@ export default function CustomConfirmPasswordPage() {
         setIsFormChanged(changed);
     }, [form, initialFormRef.current]);
 
-    const handleSubmit = async (e) => {
-        setIsSubmit(true)
-        e.preventDefault();
-        form.translate = JSON.stringify(dataLanguage[form.language]);
-        // form.page = JSON.stringify(form.page);
-        console.log(urls)
-        form.page = urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1)
-        try {
-
-            const res = await fetch(`/api/auto/${actionVahu}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(form),
-            });
-            if (!res.ok) {
-                showToastMessage('An error occurred. Please check again or contact the developer');
-            } else {
-                showToastMessage('Updated successfully.');
-                initialFormRef.current = form;
-            }
-        } catch (err) {
-            throw new Error("Server Error");
-        } finally {
-            setIsSubmit(false)
-        }
-    };
-
-    const [mounted, setMounted] = useState(false);
-    useEffect(() => {
-        setMounted(true);
-    }, []);
-
-    if (!mounted) return null;
-
     const handleCheckData = async (e) => {
         const currentDomain = form.domain.trim();
         const oldDomain = prevDomain.current.trim();
         prevDomain.current = currentDomain;
-        // console.log(prevDomain.current)
-        // console.log(currentDomain)
         if (!isValidShopifyDomain(currentDomain)) {
             setIsValidDomain(false);
             showToastMessage('Domain không hợp lệ');
@@ -154,6 +108,7 @@ export default function CustomConfirmPasswordPage() {
         }
         if (currentDomain === oldDomain || currentDomain.trim().length === 0) return;
         setLoadingDomain(true);
+        setUrls(['']);
         try {
             const query = new URLSearchParams(form).toString();
             const res = await fetch(`/api/auto/${actionVahu}?${query}`, {
@@ -190,15 +145,47 @@ export default function CustomConfirmPasswordPage() {
         }
     };
 
+    const handleSubmit = async (e) => {
+        setIsSubmit(true)
+        e.preventDefault();
+        form.translate = JSON.stringify(dataLanguage[form.language]);
+        form.page = urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1)
+        try {
+
+            const res = await fetch(`/api/auto/${actionVahu}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(form),
+            });
+            if (!res.ok) {
+                showToastMessage('An error occurred. Please check again or contact the developer');
+            } else {
+                showToastMessage('Updated successfully.');
+                initialFormRef.current = form;
+            }
+        } catch (err) {
+            throw new Error("Server Error");
+        } finally {
+            setIsSubmit(false)
+        }
+    };
+
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) return null;
+
     return (
         <><div className="container">
             <form onSubmit={handleSubmit}>
                 <h1 className="title-vahu">
                     <span onClick={() => router.back()} className="back-text"> <ArrowLeft size={27} /> </span>
-                    <span>Thêm confirm password ở Registration Form</span>
+                    <span>Add confirm password to Registration Form</span>
                 </h1>
                 <p className="label">
-                    1. Hãy điền thông tin domain khách hàng
+                    1. Enter customer domain
                 </p>
 
 
@@ -226,19 +213,6 @@ export default function CustomConfirmPasswordPage() {
                 </div>
 
                 <div className={!isValidDomain ? 'disabled' : ''}>
-                    {/* <p className="label">
-                        2. URL form RF
-                    </p>
-
-                    <input
-                        className="mb-10"
-                        type="text"
-                        placeholder='ex: "/pages/create-account-wholesale", "/pages/bss-form-test", ...'
-                        value={form.page}
-                        onChange={(e) =>
-                            setForm((prev) => ({ ...prev, page: e.target.value }))
-                        }
-                    /> */}
 
                     <div className="w-full max-w-md mx-auto mt-4">
                         <p className="label">
@@ -258,25 +232,23 @@ export default function CustomConfirmPasswordPage() {
                                         onClick={() => removeUrlInput(index)}
                                         className="btn btn-danger"
                                     >
-                                        &minus;
+                                        Remove
                                     </button>
                                 )}
 
-                                {index === urls.length - 1 && (
-                                    <div><button
-                                        type="button"
-                                        onClick={addUrlInput}
-                                        className="btn btn-success"
-                                    >
-                                        +
-                                    </button></div>
-                                )}
                             </div>
                         ))}
+                        <button
+                            type="button"
+                            onClick={addUrlInput}
+                            className="btn btn-success"
+                        >
+                            Add
+                        </button>
                     </div>
 
                     <p className="label">
-                        3. Chọn ngôn ngữ cho label và các báo lỗi khi validate field confirm
+                        3. Choose language for labels and validation error messages
                     </p>
 
                     <div className="radio-grid">
