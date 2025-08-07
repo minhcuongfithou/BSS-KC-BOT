@@ -37,11 +37,11 @@ export async function PUT(req, { params }) {
         //     new: true,
         //     runValidators: true,
         // });
-        switch(name) {
-            case 'custom-display-some-country': {
-                data.
-            }
-        }
+        // switch(name) {
+        //     case 'custom-display-some-country': {
+        //         data.
+        //     }
+        // }
         const updatedAction = await Action.findOneAndUpdate(
             { name: id },
             { data },
