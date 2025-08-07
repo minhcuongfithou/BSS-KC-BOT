@@ -127,9 +127,7 @@ export default function CustomConfirmPasswordPage() {
             } else {
                 showToastMessage('Info exists. You can edit');
                 const resReponse = await res.json();
-                console.log(resReponse)
                 const [translate, page] = resReponse.params.split("|");
-                console.log(page)
                 setForm((prev) => ({
                     ...prev,
                     page,

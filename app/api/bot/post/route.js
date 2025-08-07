@@ -14,13 +14,13 @@ export async function GET(req) {
         }
 
         let data;
-        console.log({ q })
+        // console.log({ q })
         if (!q && !type) {
             data = await postService.getAllPosts();
         } else {
             data = await postService.handleFuzzySearch(q, type);
         }
-        console.log({ data })
+        // console.log({ data })
         return new Response(JSON.stringify({
             success: true,
             data,

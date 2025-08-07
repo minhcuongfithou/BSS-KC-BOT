@@ -22,7 +22,7 @@ export async function GET(req, { params }) {
     const id = (await params).id;
     const { searchParams } = new URL(req.url);
     const domain = searchParams.get('domain');
-    console.log({ id, domain })
+    // console.log({ id, domain })
     try {
         // 1. Tìm action theo name
         const action = await Action.findOne({ name: id }).lean();
@@ -50,7 +50,7 @@ export async function PUT(req, { params }) {
             case 'custom-display-some-country': {
                 data.params = `${data.listCountrySelected.map(item => `"${item}"`).join(',')}|${data.page}`
                 data.name = titleAction;
-                console.log(data)
+                // console.log(data)
                 const updatedAction = await Handle.findOneAndUpdate(
                     { actionId: new mongoose.Types.ObjectId('685fb7a6c4ff5c8d331323a5'), domain: data.domain },
                     { $set: { ...data } },
@@ -73,7 +73,7 @@ export async function PUT(req, { params }) {
                 data.params = `${data.translate}|${data.page}`;
                 delete data.page;
                 delete data.translate;
-                console.log(data)
+                // console.log(data)
                 const updatedAction = await Handle.findOneAndUpdate(
                     { actionId: new mongoose.Types.ObjectId('6860d5da755cfef4b9d6ce49'), domain: data.domain },
                     { $set: { ...data } },

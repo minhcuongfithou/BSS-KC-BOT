@@ -110,7 +110,6 @@ const getCookie = async (token, domain) => {
                 }
             }
         );
-
         return response.data.message;
     } catch (error) {
         if (error.response && error.response.status === 401) {
@@ -183,7 +182,11 @@ const _buildContentVahu = async (author, domain, handles) => {
     const hash = 'code automatically generated';
     // remove old code auto
     const pattern = new RegExp(`\/\/ start ${hash}[\\s\\S]*?\/\/ end ${hash}`, 'g');
-    contentVahu = contentVahu.replace(pattern, '').trim();
+    if (contentVahu) {
+        contentVahu = contentVahu.replace(pattern, '').trim();
+    } else {
+        contentVahu = '';
+    }
     // end remove old code auto
     let codeHandle = ``;
     let listActionFilter = ``;
@@ -235,7 +238,7 @@ const _buildContentVahu = async (author, domain, handles) => {
         if (listFilter.length) {
             listFilter.forEach(filter => {
                 const key = Object.keys(filter)[0];
-                console.log({ key })
+                // console.log({ key })
                 const keyName = key.replace(/[^a-zA-Z0-9]+(.)?/g, (_, char) => char ? char.toUpperCase() : '');
                 let callback = Object.values(filter)[0];
                 // replace variant in callback

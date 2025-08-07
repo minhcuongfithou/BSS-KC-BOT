@@ -103,7 +103,6 @@ export default function CreateVahuPage() {
         try {
             form.author = session?.user?.email;
             form.page = urls.reduce((a, b) => a += `"${b.trim()}",`, '').slice(0, -1);
-            console.log(form)
             const res = await fetch(`/api/auto/${actionVahu}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
@@ -144,7 +143,7 @@ export default function CreateVahuPage() {
                 setForm((prev) => ({
                     ...prev,
                     page: '',
-                    listCountrySelected: ['']
+                    listCountrySelected: []
                 }));
             } else {
                 showToastMessage('Info exists. You can edit');
@@ -173,7 +172,6 @@ export default function CreateVahuPage() {
 
     if (loading) return <></>;
     if (!mounted) return null;
-    console.log(form)
     return (
         <><div className="container">
             <form onSubmit={handleSubmit}>
