@@ -1,11 +1,15 @@
 'use client';
+
+import '@/app/styles/badge.css';
+
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Pencil, ClipboardList, Trash2, Eye } from 'lucide-react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
-import '@/app/styles/badge.css';
+import { useUser } from '@/app/context/UserContext';
 
 export default function AllPostsPage() {
+    const session = useUser();
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState([]);
     const router = useRouter();
@@ -65,22 +69,24 @@ export default function AllPostsPage() {
                                     <Eye size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Xem</span>
                                 </a>
-                                <a className="btn btn-sm btn-warning" href={`/posts/${post._id}`} style={{ marginRight: 8 }}>
-                                    <Pencil size={20} className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Chỉnh sửa</span>
-                                </a>
-                                <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => {
-                                        const confirmed = window.confirm('Delete this post?');
-                                        if (confirmed) {
-                                            handleDelete(post._id);
-                                        }
-                                    }}
-                                >
-                                    <Trash2 size={20} className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Xóa</span>
-                                </button>
+                                {session?.user?.email === 'mcvp9x@gmail.com' && <>
+                                    <a className="btn btn-sm btn-warning" href={`/posts/${post._id}`} style={{ marginRight: 8 }}>
+                                        <Pencil size={20} className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Chỉnh sửa</span>
+                                    </a>
+                                    <button
+                                        className="btn btn-sm btn-danger"
+                                        onClick={() => {
+                                            const confirmed = window.confirm('Delete this post?');
+                                            if (confirmed) {
+                                                handleDelete(post._id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 size={20} className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Xóa</span>
+                                    </button>
+                                </>}
                             </td>
                         </tr>
                     ))}

@@ -66,7 +66,7 @@ class CombinedAction extends BaseAction {
 │ Thêm field confirm password -- Registration Form │
 │ ** Implementer: mcvp9x@gmail.com **              │
 │ ** Created at : 06/08/2025 20:43 **              │
-│ ** Updated at : 06/08/2025 20:59 **              │
+│ ** Updated at : 07/08/2025 12:19 **              │
 └──────────────────────────────────────────────────┘
 */
 class customConfirmPassword extends BaseAction {
@@ -74,7 +74,7 @@ class customConfirmPassword extends BaseAction {
         super();
         this.handle = {
             coreJS: () => {
-                const language = {"labelPass":"Confirm Password","emptyPass":"Please confirm your password","incorrectPass":"Passwords do not match"}
+                const language = {"labelPass":"Conferma password","emptyPass":"Per favore conferma la tua password","incorrectPass":"Le password non corrispondono"}
                 const isRFPage = ["123","/pages/bss-form-test"].includes(window.location.pathname)
                 if (!isRFPage) return;
                 const intervalTime = 100;
@@ -184,7 +184,7 @@ class customConfirmPassword extends BaseAction {
 │ Custom chỉ show một vài quốc gia nhất định -- Registration Form │
 │ ** Implementer: mcvp9x@gmail.com **                             │
 │ ** Created at : 29/06/2025 22:31 **                             │
-│ ** Updated at : 06/08/2025 21:38 **                             │
+│ ** Updated at : 07/08/2025 14:36 **                             │
 └─────────────────────────────────────────────────────────────────┘
 */
 class customDisplaySomeCountry extends BaseAction {
@@ -196,7 +196,7 @@ class customDisplaySomeCountry extends BaseAction {
             },
             customRfCountry: (...data) => {  
               const defaultCountries = data[0];
-              const countryList = ["AF","AE","VN"];
+              const countryList = ["VN","UZ"];
               return defaultCountries.filter(country => countryList.includes(country.value));
             },
         };

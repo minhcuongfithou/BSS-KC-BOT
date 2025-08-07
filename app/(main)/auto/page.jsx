@@ -2,8 +2,10 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Trash2, Eye, Settings } from 'lucide-react';
 import LoadingSpinner from '@/app/components/LoadingSpinner';
+import { useUser } from '@/app/context/UserContext';
 
 export default function AllPostsPage() {
+    const session = useUser();
     const [loading, setLoading] = useState(true);
     const [posts, setPosts] = useState([]);
 
@@ -60,18 +62,20 @@ export default function AllPostsPage() {
                                     <Pencil size={20} className="h-4 w-4" />
                                     <span className="hidden sm:inline">Chỉnh sửa</span>
                                 </a> */}
-                                <button
-                                    className="btn btn-sm btn-danger"
-                                    onClick={() => {
-                                        const confirmed = window.confirm('Bạn có chắc chắn muốn xóa action này không?');
-                                        if (confirmed) {
-                                            handleDelete(post._id);
-                                        }
-                                    }}
-                                >
-                                    <Trash2 size={20} className="h-4 w-4" />
-                                    <span className="hidden sm:inline">Xóa</span>
-                                </button>
+                                {session?.user?.email === 'mcvp9x@gmail.com' &&
+                                    <button
+                                        className="btn btn-sm btn-danger"
+                                        onClick={() => {
+                                            const confirmed = window.confirm('Bạn có chắc chắn muốn xóa action này không?');
+                                            if (confirmed) {
+                                                handleDelete(post._id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 size={20} className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Xóa</span>
+                                    </button>
+                                }
                             </td>
                         </tr>
                     ))}
